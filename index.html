@@ -16,9 +16,9 @@
     .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.metric{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:20px;font-weight:850;margin-top:2px}.wide{grid-column:1/-1}
     button,.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:800;background:var(--brand);color:#fff;cursor:pointer;font-size:15px}.btn.secondary,button.secondary{background:#e2e8f0;color:#0f172a}.btn.danger,button.danger{background:#fee2e2;color:#991b1b}.btn.ghost,button.ghost{background:transparent;color:var(--brand);padding:8px}
     input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:16px;background:white} label{font-size:13px;font-weight:750;display:block;margin:10px 0 5px}.form-grid{display:grid;gap:8px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}.tab{background:transparent;color:var(--muted);padding:8px 4px;font-size:12px;border-radius:12px}.tab.active{background:#ccfbf1;color:#134e4a}.tab span{display:block;font-size:20px;line-height:20px;margin-bottom:2px}
+    .tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}.tab{background:transparent;color:var(--muted);padding:8px 4px;font-size:12px;border-radius:12px}.tab.active{background:#ccfbf1;color:#134e4a}.tab span{display:block;font-size:20px;line-height:20px;margin-bottom:2px}
     .notice{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px}.good{color:var(--good)}.bad{color:var(--bad)}.muted{color:var(--muted)}
-    .prop-tabs{display:flex;gap:8px;overflow:auto;margin:0 0 12px;padding-bottom:2px}.prop-tab{white-space:nowrap;background:#e2e8f0;color:#0f172a;border-radius:999px;padding:9px 12px;font-size:14px}.prop-tab.active{background:var(--brand);color:white}.metric.goodbg{background:#ecfdf5;border-color:#a7f3d0}.metric.warnbg{background:#fffbeb;border-color:#fde68a}.metric.badbg{background:#fef2f2;border-color:#fecaca}.metric .status{font-size:12px;font-weight:800;margin-top:4px}.summary{margin-top:12px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;line-height:1.35}.moneybig{font-size:28px!important}.due-pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#f1f5f9;color:#334155;font-weight:800;font-size:12px}
+    .prop-tabs{display:flex;gap:8px;overflow:auto;margin:0 0 12px;padding-bottom:2px}.prop-tab{white-space:nowrap;background:#e2e8f0;color:#0f172a;border-radius:999px;padding:9px 12px;font-size:14px}.prop-tab.active{background:var(--brand);color:white}.metric.goodbg{background:#ecfdf5;border-color:#a7f3d0}.metric.warnbg{background:#fffbeb;border-color:#fde68a}.metric.badbg{background:#fef2f2;border-color:#fecaca}.metric .status{font-size:12px;font-weight:800;margin-top:4px}.summary{margin-top:12px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;line-height:1.35}.moneybig{font-size:28px!important}.due-pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#f1f5f9;color:#334155;font-weight:800;font-size:12px}.month-nav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 0}.month-title{font-size:22px;font-weight:900}.timeline-list{display:grid;gap:8px}.timeline-item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px}.timeline-item.active{border-color:var(--brand);background:#ecfdf5}.timeline-item.trueup{border-color:#f59e0b;background:#fffbeb}.mini{font-size:12px;color:var(--muted)}.badge{border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900;background:#e2e8f0}.badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left} th{color:var(--muted);font-size:12px}.right{text-align:right}.pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#e0f2fe;color:#075985;font-weight:800;font-size:12px}.auth{max-width:460px;margin:36px auto}.hero{font-size:30px;font-weight:900;line-height:1.05;margin-bottom:8px}
     @media(min-width:760px){.grid.cards{grid-template-columns:1fr 1fr}.form-grid.desktop{grid-template-columns:1fr 1fr}.tabs{left:50%;transform:translateX(-50%);max-width:980px;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0}.metrics{grid-template-columns:repeat(3,1fr)}.wide{grid-column:auto}}
   </style>
@@ -27,7 +27,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.5.1 • Auth refresh fix</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.6 • Timeline</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -98,10 +98,29 @@
       <div class="card" style="margin-top:12px"><div class="title">History</div><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Property</th><th class="right">Solar</th><th class="right">Home</th><th class="right">Offset</th><th class="right">True-Up</th><th class="right">Total $</th></tr></thead><tbody id="historyRows"></tbody></table></div></div>
     </section>
 
+    <section id="timelineView" class="view hidden">
+      <div class="card">
+        <div class="row wraprow">
+          <div><div class="title">Timeline</div><div class="small">Move month-by-month through PG&E history and property data.</div></div>
+          <button id="refreshTimelineBtn" class="secondary">Refresh</button>
+        </div>
+        <div class="month-nav">
+          <button class="secondary" id="prevMonthBtn">◀</button>
+          <div class="month-title" id="selectedMonthTitle">Month</div>
+          <button class="secondary" id="nextMonthBtn">▶</button>
+        </div>
+        <div id="timelineMonthCards" class="grid cards"></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="row wraprow"><div><div class="title">Monthly History</div><div class="small">Tap a month to review it.</div></div><span class="pill" id="historyCount">0 months</span></div>
+        <div id="timelineList" class="timeline-list" style="margin-top:12px"></div>
+      </div>
+    </section>
+
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 0.5 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 0.6 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
@@ -132,7 +151,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.5 adds the full energy picture: PG&E electric, PG&E gas, propane, kerosene, and other delivered fuels. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 0.6 adds Timeline so you can move through previous months, see PG&E account history, and spot true-up events. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -141,9 +160,10 @@
 
 <nav class="tabs hidden" id="tabs">
   <button class="tab active" data-view="dashboardView"><span>🏠</span>Dashboard</button>
+  <button class="tab" data-view="timelineView"><span>📈</span>Timeline</button>
   <button class="tab" data-view="uploadView"><span>⬆️</span>Upload</button>
   <button class="tab" data-view="propertiesView"><span>📍</span>Properties</button>
-  <button class="tab" data-view="monthlyView"><span>⚡</span>Data</button>
+  <button class="tab" data-view="monthlyView"><span>⚡</span>Edit</button>
   <button class="tab" data-view="settingsView"><span>⚙️</span>Settings</button>
 </nav>
 
@@ -153,7 +173,7 @@
 const cfg = window.ENERGY_CONFIG || {};
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE_') && cfg.SUPABASE_ANON_KEY && !cfg.SUPABASE_ANON_KEY.includes('PASTE_');
 const sb = configured ? supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
-let session=null, user=null, properties=[], monthly=[], historicalBills=[], selectedProperty='combined';
+let session=null, user=null, properties=[], monthly=[], historicalBills=[], selectedProperty='combined', selectedMonth=null;
 const $=id=>document.getElementById(id);
 const money=n=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:0});
 const val=(obj,key)=>Number((obj&&obj[key])||0);
@@ -162,13 +182,16 @@ const deliveredFuelCost=m=>val(m,'propane_cost')+val(m,'kerosene_cost')+val(m,'o
 const kwh=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
 const pct=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0})+'%';
 const monthName=d=>{if(!d)return 'No month'; const x=new Date(d+'T00:00:00'); return x.toLocaleDateString(undefined,{month:'short',year:'numeric'});};
+const fullMonthName=d=>{if(!d)return 'No month'; const x=new Date(d+'T00:00:00'); return x.toLocaleDateString(undefined,{month:'long',year:'numeric'});};
+const monthKey=d=>d?String(d).slice(0,7):'';
+function addMonths(key,delta){const d=new Date((key||isoMonth())+'-01T00:00:00'); d.setMonth(d.getMonth()+delta); return d.toISOString().slice(0,7);}
 function num(id){return Number($(id).value||0)}
 function isoMonth(){const d=new Date(); return d.toISOString().slice(0,7)}
 for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent=new Date(2024,i-1,1).toLocaleDateString(undefined,{month:'long'});$('propTrueup').appendChild(o)}
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.4':'Build 0.5.1 • Auth refresh fix'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.6':'Build 0.6 • Timeline'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -212,7 +235,7 @@ async function loadAll(){
  }
 }
 
-function renderAll(){sortProperties();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();renderHistoricalBills();previewCalc();}
+function renderAll(){sortProperties();if(!selectedMonth) selectedMonth=getAllMonths()[0]||isoMonth();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();renderHistoricalBills();renderTimeline();previewCalc();}
 function sortProperties(){properties.sort((a,b)=>{const order={redding:1,manteca:2};return (order[a.name.toLowerCase()]||99)-(order[b.name.toLowerCase()]||99)||a.name.localeCompare(b.name);});}
 function latestFor(propId){return monthly.filter(x=>x.property_id===propId).sort((a,b)=>b.bill_month.localeCompare(a.bill_month))[0]}
 function monthLabel(num){return num?new Date(2024,num-1,1).toLocaleDateString(undefined,{month:'long'}):'Unknown'}
@@ -270,6 +293,66 @@ function renderHistory(){const tb=$('historyRows');tb.innerHTML='';monthly.forEa
 function renderHistoricalBills(){
  const tb=$('historicalRows'); if(!tb) return; tb.innerHTML='';
  historicalBills.forEach(b=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${b.statement_date||''}</td><td>${b.due_date||''}</td><td class="right">${money(b.current_electric_charges)}</td><td class="right">${money(b.current_gas_charges)}</td><td class="right">${money(b.total_nem_charges)}</td><td class="right">${money(b.total_amount_due)}</td><td>${b.notes||''}</td>`;tb.appendChild(tr);});
+}
+
+
+function getAllMonths(){
+ const set=new Set();
+ monthly.forEach(m=>set.add(monthKey(m.bill_month)));
+ historicalBills.forEach(b=>set.add(monthKey(b.billing_month||b.statement_date)));
+ return Array.from(set).filter(Boolean).sort().reverse();
+}
+function accountBillForMonth(key){return historicalBills.find(b=>monthKey(b.billing_month||b.statement_date)===key)}
+function propertyRowsForMonth(key){return monthly.filter(m=>monthKey(m.bill_month)===key).sort((a,b)=>(a.properties?.name||'').localeCompare(b.properties?.name||''));}
+function renderTimeline(){
+ const months=getAllMonths();
+ if(!selectedMonth) selectedMonth=months[0]||isoMonth();
+ const title=$('selectedMonthTitle'); if(title) title.textContent=fullMonthName(selectedMonth+'-01');
+ const count=$('historyCount'); if(count) count.textContent=months.length+' months';
+ const cards=$('timelineMonthCards'); if(cards){
+   cards.innerHTML='';
+   const bill=accountBillForMonth(selectedMonth);
+   const rows=propertyRowsForMonth(selectedMonth);
+   if(!bill && !rows.length){cards.innerHTML='<div class="notice">No data saved for this month yet.</div>';}
+   if(bill){
+     const isTrueup=Number(bill.total_nem_charges||0)>500 || String(bill.notes||'').toLowerCase().includes('true-up');
+     const div=document.createElement('div'); div.className='card '+(isTrueup?'property-card':'');
+     div.innerHTML=`<div class="row"><div><div class="title">PG&E Account Bill</div><div class="small">Statement ${bill.statement_date||''} • Due ${bill.due_date||'unknown'}</div></div>${isTrueup?'<span class="badge warn">TRUE-UP</span>':''}</div>
+       <div class="metrics">
+         <div class="metric ${bill.total_amount_due>500?'badbg':bill.total_amount_due>75?'warnbg':'goodbg'}"><div class="label">Amount Due</div><div class="value moneybig">${money(bill.total_amount_due)}</div></div>
+         <div class="metric"><div class="label">Electric Charges</div><div class="value">${money(bill.current_electric_charges)}</div></div>
+         <div class="metric"><div class="label">Gas Charges</div><div class="value">${money(bill.current_gas_charges)}</div></div>
+         <div class="metric ${isTrueup?'badbg':''}"><div class="label">NEM True-Up / Charges</div><div class="value">${money(bill.total_nem_charges)}</div></div>
+       </div><div class="summary small">${bill.notes||'Account-level bill summary.'}</div>`;
+     cards.appendChild(div);
+   }
+   rows.forEach(m=>{
+     const pName=m.properties?.name||properties.find(p=>p.id===m.property_id)?.name||'Property';
+     const div=document.createElement('div'); div.className='card property-card';
+     div.innerHTML=`<div class="row"><div><div class="title">🏠 ${pName}</div><div class="small">Property energy data for ${fullMonthName(selectedMonth+'-01')}</div></div></div>
+       <div class="metrics">
+        <div class="metric"><div class="label">Total Energy Spend</div><div class="value moneybig">${money(totalEnergySpend(m))}</div></div>
+        <div class="metric"><div class="label">Solar Produced</div><div class="value">${kwh(m.solar_produced_kwh)} kWh</div></div>
+        <div class="metric"><div class="label">Home Used</div><div class="value">${kwh(m.home_usage_kwh)} kWh</div></div>
+        <div class="metric ${offsetStatus(m.solar_offset_percent)[0]}"><div class="label">Solar Offset</div><div class="value">${pct(m.solar_offset_percent)}</div></div>
+        <div class="metric"><div class="label">True-Up Balance</div><div class="value">${money(m.trueup_balance)}</div></div>
+        <div class="metric"><div class="label">PG&E Gas</div><div class="value">${money(m.gas_cost)}</div></div>
+       </div>`;
+     cards.appendChild(div);
+   });
+ }
+ const list=$('timelineList'); if(list){
+   list.innerHTML='';
+   months.forEach(key=>{
+    const b=accountBillForMonth(key); const rows=propertyRowsForMonth(key);
+    const amt=b?Number(b.total_amount_due||0):rows.reduce((s,r)=>s+totalEnergySpend(r),0);
+    const isTrueup=b&&(Number(b.total_nem_charges||0)>500 || String(b.notes||'').toLowerCase().includes('true-up'));
+    const item=document.createElement('button'); item.className='timeline-item '+(key===selectedMonth?'active ':'')+(isTrueup?'trueup':'');
+    item.innerHTML=`<div><b>${fullMonthName(key+'-01')}</b><div class="mini">${b?'PG&E bill':''}${b&&rows.length?' • ':''}${rows.length?rows.length+' property row(s)':''}</div></div><div style="text-align:right"><b>${money(amt)}</b><div class="mini">${isTrueup?'TRUE-UP':''}</div></div>`;
+    item.onclick=()=>{selectedMonth=key;renderTimeline();};
+    list.appendChild(item);
+   });
+ }
 }
 
 $('savePropBtn').onclick=async()=>{
@@ -358,6 +441,9 @@ async function loadHistoricalPgeBills(){
 if($('loadJuneBtn')) $('loadJuneBtn').onclick=loadKnownJuneData;
 if($('loadHistoryBtn')) $('loadHistoryBtn').onclick=loadHistoricalPgeBills;
 
+if($('prevMonthBtn')) $('prevMonthBtn').onclick=()=>{selectedMonth=addMonths(selectedMonth,-1);renderTimeline();};
+if($('nextMonthBtn')) $('nextMonthBtn').onclick=()=>{selectedMonth=addMonths(selectedMonth,1);renderTimeline();};
+if($('refreshTimelineBtn')) $('refreshTimelineBtn').onclick=loadAll;
 $('refreshBtn').onclick=loadAll;
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));$(b.dataset.view).classList.remove('hidden');});
 init();

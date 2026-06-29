@@ -1,44 +1,35 @@
-# Shearin Energy Manager v0.5.1 Auth Fix
+# Shearin Energy Manager v0.6 – Timeline
 
-Complete release. Fixes expired Supabase JWT sessions so the app returns to the login screen instead of leaving the dashboard blank. No SQL changes required.
+Mobile-first energy dashboard for Redding and Manteca.
 
-Deploy by uploading all files to GitHub and committing. Then refresh the GitHub Pages app and sign in again if prompted.
+## What's new in v0.6
 
-# Shearin Energy Manager v0.5 Redo
+- Adds a **Timeline** tab.
+- Lets you move month-by-month through saved history.
+- Shows PG&E account-level bill history by month.
+- Highlights large true-up events.
+- Shows property-specific monthly energy rows when available.
+- Keeps manual edit/data entry as backup.
+- No new SQL migration required if you already ran:
+  - `supabase/001_foundation.sql`
+  - `supabase/002_delivered_fuels.sql`
+  - `supabase/003_historical_bills.sql`
 
-Complete release. Do not upload partial files.
+## Deploy
 
-## What changed
-
-- Keeps v0.4 financial dashboard.
-- Adds full energy categories: PG&E electric, PG&E gas, propane, kerosene, other delivered fuels.
-- Adds Manteca Tesla June 2026 solar production: 771.0 kWh.
-- Adds Historical PG&E Account Bills table and importer.
-- Adds missing manual edit fields for propane, kerosene, and other energy costs.
-- Keeps upload-first workflow; manual editing remains backup only.
-
-## SQL required
-
-Run these in Supabase SQL Editor in order if not already run:
-
-1. `supabase/002_delivered_fuels.sql`
-2. `supabase/003_historical_bills.sql`
-
-Do not re-run `001_foundation.sql` if it already exists; it is included for archive completeness.
-
-## Deployment
-
-Upload the complete contents of this ZIP to GitHub and commit.
+Upload the full contents of this folder to GitHub and commit.
 
 Then refresh the GitHub Pages app.
 
-## After deployment
+## After deploy
 
-Go to Upload tab and click:
-
-1. `Load / Repair June 2026 Known Data`
-2. `Load Historical PG&E Bills`
+1. Sign in.
+2. Go to **Upload**.
+3. If needed, click:
+   - **Load / Repair June 2026 Known Data**
+   - **Load Historical PG&E Bills**
+4. Go to **Timeline** and review prior months.
 
 ## Notes
 
-Historical PG&E records are currently account-level summaries from the uploaded statements. Property-level parsing will come later as the import engine improves.
+Historical PG&E bills are currently account-level summaries. Full property-level parsing and automatic PDF extraction are future builds.

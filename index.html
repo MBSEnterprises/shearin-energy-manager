@@ -28,7 +28,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.7.1 • Bill Tie-Out</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.7.2 • Bill Tie-Out</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -122,7 +122,7 @@
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 0.7.1 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 0.7.2 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
@@ -153,7 +153,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.7.1 adds a bill-first combined dashboard and Timeline so you can move through previous months, see PG&E account history, and spot true-up events. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 0.7.2 adds a bill-first combined dashboard and Timeline so you can move through previous months, see PG&E account history, and spot true-up events. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -193,7 +193,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.7.1':'Build 0.7.1 • Bill Tie-Out'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.7.2':'Build 0.7.2 • Bill Tie-Out'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -306,6 +306,7 @@ function renderDashboard(){
  renderPropertyTabs();
  const box=$('dashboardCards'); box.innerHTML='';
  if(!properties.length){box.innerHTML='<div class="card notice">No properties yet. Go to Upload and load June 2026 known data, or add properties manually.</div>'; return;}
+ if(selectedProperty==='combined') renderCombinedSummary(box);
  let list=selectedProperty==='combined'?properties:properties.filter(p=>p.id===selectedProperty);
  list.forEach(p=>{
    const m=latestFor(p.id); const tu=trueupInfo(p,m);

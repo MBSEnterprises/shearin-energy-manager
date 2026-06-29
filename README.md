@@ -1,4 +1,4 @@
-# Shearin Energy Manager v0.7.1 — Version Label Fix
+# Shearin Energy Manager v0.7.2 — Version Label Fix
 
 Complete release ZIP.
 
@@ -11,7 +11,7 @@ Complete release ZIP.
 Upload all files in this folder to GitHub, commit, wait for GitHub Pages deployment, then hard refresh.
 
 
-## v0.7.1 Bill Tie-Out
+## v0.7.2 Bill Tie-Out
 - Adds Combined Portfolio top card.
 - Shows PG&E Total Due that ties to the bill.
 - Shows property breakdown under the total due.
@@ -19,6 +19,12 @@ Upload all files in this folder to GitHub, commit, wait for GitHub Pages deploym
 - No SQL changes required if 002 and 003 were already run.
 
 
-## v0.7.1
+## v0.7.2
 - Fixed signed-in header version label so it matches the deployed release.
+- No SQL changes.
+
+
+## v0.7.2
+- Fixes Combined tab so the Combined Portfolio card actually renders.
+- Shows PG&E Total Due tie-out at the top of the Combined dashboard.
 - No SQL changes.

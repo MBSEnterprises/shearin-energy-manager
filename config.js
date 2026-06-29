@@ -1,6 +1,6 @@
-// Replace these after you create the Supabase project.
-// Keep this file in the repo for easy setup, but only use the PUBLIC anon key here.
-window.SHEARIN_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: ""
+// Shearin Energy Manager configuration
+// Replace these values after you create the Supabase project.
+window.ENERGY_CONFIG = {
+  SUPABASE_URL: 'PASTE_SUPABASE_PROJECT_URL_HERE',
+  SUPABASE_ANON_KEY: 'PASTE_SUPABASE_ANON_KEY_HERE'
 };

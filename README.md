@@ -1,45 +1,41 @@
-# Shearin Energy Manager V2
+# Shearin Energy Manager v0.1
 
-Mobile-first energy tracking app for PG&E + Tesla data.
+Mobile-first energy dashboard for Redding and Manteca.
 
-## What it tracks
+## Build 0.1 includes
 
-- Properties: Redding, Manteca, and future locations
-- PG&E imports / exports / net usage
-- Tesla solar production
-- True-Up balance
-- Monthly NEM charges
-- Gas charges
-- Calculated home usage
-- Calculated solar offset
+- Supabase authentication
+- Properties table
+- Monthly energy table
+- Manual monthly energy entry
+- Dashboard cards
+- Automatic calculations:
+  - Home usage = solar produced + grid import - grid export
+  - Solar offset = solar produced / home usage
+- Mobile-friendly layout
 
-## Setup overview
+## Setup
 
-1. Create a GitHub repo named `shearin-energy-manager`.
-2. Upload these files into the repo.
-3. Create a new Supabase project.
-4. Run `SUPABASE_SCHEMA_V2.sql` in Supabase SQL Editor.
-5. In Supabase, copy:
-   - Project URL
-   - anon public key
-6. Edit `config.js` and paste those values.
-7. Enable GitHub Pages or deploy with Netlify/Vercel.
+1. Create a new Supabase project.
+2. Open Supabase SQL Editor.
+3. Run `supabase/001_foundation.sql`.
+4. In Supabase, go to Project Settings > API.
+5. Copy the Project URL and anon public key.
+6. Paste them into `config.js`.
+7. Commit the updated files to GitHub.
+8. Deploy using GitHub Pages, Netlify, or Vercel.
 
-## Important
+## First test
 
-This version supports manual monthly entry first. That is intentional. Direct Tesla / PG&E automation should come after the database and dashboard are stable.
-
-## Monthly workflow
-
-1. Download PG&E bill PDF.
-2. Capture Tesla Month screenshot.
-3. Enter values into Add Month.
-4. Review Dashboard.
-
-## Key formula
-
-Estimated Home Usage = PG&E Import + (Tesla Solar Produced - PG&E Export)
-
-Solar Offset % = Tesla Solar Produced / Estimated Home Usage
-
-These are estimates because PG&E does not report solar used directly by the home.
+1. Create an account.
+2. Click **Add starter properties**.
+3. Go to **Monthly**.
+4. Enter June Redding data:
+   - Solar produced: 1822.1
+   - Grid import: 1554.428
+   - Grid export: 781.88
+   - Monthly NEM charge: 323.13
+   - True-Up balance: 4827.60
+   - Electric base charge: 25.39
+5. Save.
+6. Confirm dashboard shows home usage and solar offset.

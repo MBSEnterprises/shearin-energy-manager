@@ -1,6 +1,5 @@
 // Shearin Energy Manager configuration
-// Replace these values after you create the Supabase project.
 window.ENERGY_CONFIG = {
-  SUPABASE_URL: 'PASTE_SUPABASE_PROJECT_URL_HERE',
-  SUPABASE_ANON_KEY: 'PASTE_SUPABASE_ANON_KEY_HERE'
+  SUPABASE_URL: 'https://bexfmpkgkwtanxigeiox.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_x-4NNf0TO3grqX5NUlD5Ow_7hcuOVJk'
 };

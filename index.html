@@ -27,7 +27,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.4 Financial dashboard</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.5 Redo • Full energy + history</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -84,43 +84,55 @@
           <div><label>Electric base charge</label><input id="baseCharge" type="number" step="0.01" /></div>
           <div><label>Gas cost</label><input id="gasCost" type="number" step="0.01" /></div>
           <div><label>Gas therms</label><input id="gasTherms" type="number" step="0.001" /></div>
+          <div><label>Propane cost</label><input id="propaneCost" type="number" step="0.01" /></div>
+          <div><label>Propane gallons</label><input id="propaneGallons" type="number" step="0.001" /></div>
+          <div><label>Kerosene cost</label><input id="keroseneCost" type="number" step="0.01" /></div>
+          <div><label>Kerosene gallons</label><input id="keroseneGallons" type="number" step="0.001" /></div>
+          <div><label>Other energy cost</label><input id="otherEnergyCost" type="number" step="0.01" /></div>
           <div><label>Amount due now</label><input id="amountDue" type="number" step="0.01" /></div>
           <div><label>Notes</label><input id="energyNotes" /></div>
         </div>
         <div class="notice small" style="margin-top:12px" id="calcPreview">Enter solar, import, and export to preview home usage.</div>
         <button id="saveEnergyBtn" style="margin-top:12px">Save monthly data</button>
       </div>
-      <div class="card" style="margin-top:12px"><div class="title">History</div><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Property</th><th class="right">Solar</th><th class="right">Home</th><th class="right">Offset</th><th class="right">True-Up</th></tr></thead><tbody id="historyRows"></tbody></table></div></div>
+      <div class="card" style="margin-top:12px"><div class="title">History</div><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Property</th><th class="right">Solar</th><th class="right">Home</th><th class="right">Offset</th><th class="right">True-Up</th><th class="right">Total $</th></tr></thead><tbody id="historyRows"></tbody></table></div></div>
     </section>
 
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 0.4 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 0.5 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
         <button id="loadJuneBtn" style="margin-top:12px">Load / Repair June 2026 Known Data</button>
+        <button id="loadHistoryBtn" class="secondary" style="margin-top:12px">Load Historical PG&amp;E Bills</button>
+        <p class="small" id="importStatus"></p>
       </div>
 
       <div class="grid cards" style="margin-top:12px">
         <div class="card">
           <div class="title">📄 PG&E Bill</div>
-          <p class="small">Coming next: upload the PDF and the app extracts billing period, imports, exports, NEM charge, gas, and True-Up.</p>
+          <p class="small">Coming next: upload one or more historical PG&E PDFs and the app extracts billing period, imports, exports, NEM charge, gas, and True-Up.</p>
           <button class="secondary" disabled>Upload PG&E PDF soon</button>
         </div>
         <div class="card">
           <div class="title">☀️ Tesla Screenshots</div>
-          <p class="small">Coming next: upload screenshots and confirm solar production numbers for each property.</p>
+          <p class="small">Coming next: upload Tesla screenshots for Redding or Manteca and confirm solar production numbers.</p>
           <button class="secondary" disabled>Upload Tesla screenshots soon</button>
         </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="title">Historical PG&amp;E Account Bills</div>
+        <p class="small">This is account-level PG&amp;E history from uploaded bills. Detailed property-level parsing comes next.</p>
+        <div style="overflow:auto"><table><thead><tr><th>Statement</th><th>Due</th><th class="right">Electric</th><th class="right">Gas</th><th class="right">NEM</th><th class="right">Amount Due</th><th>Notes</th></tr></thead><tbody id="historicalRows"></tbody></table></div>
       </div>
     </section>
 
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.4 adds bill-first financial cards, property tabs, true-up due dates, and conditional status colors. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 0.5 adds the full energy picture: PG&E electric, PG&E gas, propane, kerosene, and other delivered fuels. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -141,9 +153,12 @@
 const cfg = window.ENERGY_CONFIG || {};
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE_') && cfg.SUPABASE_ANON_KEY && !cfg.SUPABASE_ANON_KEY.includes('PASTE_');
 const sb = configured ? supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
-let session=null, user=null, properties=[], monthly=[], selectedProperty='combined';
+let session=null, user=null, properties=[], monthly=[], historicalBills=[], selectedProperty='combined';
 const $=id=>document.getElementById(id);
 const money=n=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:0});
+const val=(obj,key)=>Number((obj&&obj[key])||0);
+const totalEnergySpend=m=>val(m,'amount_due_now')+val(m,'propane_cost')+val(m,'kerosene_cost')+val(m,'other_energy_cost');
+const deliveredFuelCost=m=>val(m,'propane_cost')+val(m,'kerosene_cost')+val(m,'other_energy_cost');
 const kwh=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
 const pct=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0})+'%';
 const monthName=d=>{if(!d)return 'No month'; const x=new Date(d+'T00:00:00'); return x.toLocaleDateString(undefined,{month:'short',year:'numeric'});};
@@ -153,7 +168,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.4':'Build 0.4 Financial dashboard'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.4':'Build 0.5 Redo • Full energy + history'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -168,10 +183,15 @@ $('signOutBtn').onclick=async()=>{await sb.auth.signOut()};
 async function loadAll(){
  const p=await sb.from('properties').select('*').order('name'); if(p.error) alert(p.error.message); properties=p.data||[];
  const m=await sb.from('monthly_energy').select('*, properties(name)').order('bill_month',{ascending:false}); if(m.error) alert(m.error.message); monthly=m.data||[];
+ historicalBills=[];
+ try{
+   const h=await sb.from('historical_bills').select('*').order('statement_date',{ascending:false});
+   if(!h.error) historicalBills=h.data||[];
+ }catch(e){ historicalBills=[]; }
  renderAll();
 }
 
-function renderAll(){sortProperties();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();previewCalc();}
+function renderAll(){sortProperties();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();renderHistoricalBills();previewCalc();}
 function sortProperties(){properties.sort((a,b)=>{const order={redding:1,manteca:2};return (order[a.name.toLowerCase()]||99)-(order[b.name.toLowerCase()]||99)||a.name.localeCompare(b.name);});}
 function latestFor(propId){return monthly.filter(x=>x.property_id===propId).sort((a,b)=>b.bill_month.localeCompare(a.bill_month))[0]}
 function monthLabel(num){return num?new Date(2024,num-1,1).toLocaleDateString(undefined,{month:'long'}):'Unknown'}
@@ -185,7 +205,7 @@ function trueupInfo(p,m){
  const text=cycles===0?'Due this cycle':cycles===1?'1 billing cycle remaining':cycles+' billing cycles remaining';
  return {due,cycles,status,text};
 }
-function billStatus(amount){amount=Number(amount||0); if(amount<=0) return ['goodbg','On target']; if(amount<=50) return ['warnbg','Low bill']; return ['badbg','Higher bill'];}
+function billStatus(amount){amount=Number(amount||0); if(amount<=0) return ['goodbg','On target']; if(amount<=75) return ['warnbg','Low bill']; return ['badbg','Higher bill'];}
 function trueupStatus(balance,cycles){balance=Number(balance||0); if(balance<=100) return ['goodbg','Low balance']; if(balance>1000 && cycles!==null && cycles<=4) return ['badbg','Budget now']; return ['warnbg','Watch balance'];}
 function offsetStatus(offset){offset=Number(offset||0); if(offset>=100) return ['goodbg','Goal met']; if(offset>=70) return ['warnbg','Short of zero-bill goal']; return ['badbg','Needs attention'];}
 function renderPropertyTabs(){
@@ -203,17 +223,20 @@ function renderDashboard(){
    const html=m?(()=>{const bs=billStatus(m.amount_due_now); const ts=trueupStatus(m.trueup_balance,tu.cycles); const os=offsetStatus(m.solar_offset_percent); return `
     <div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">${monthName(m.bill_month)} • ${p.utility_company||''} • ${p.solar_company||''}</div></div><span class="due-pill">True-Up: ${tu.due}</span></div>
     <div class="metrics">
-      <div class="metric ${bs[0]}"><div class="label">Bill This Month</div><div class="value moneybig">${money(m.amount_due_now)}</div><div class="status">${bs[1]}</div></div>
+      <div class="metric ${bs[0]}"><div class="label">Total Energy Spend</div><div class="value moneybig">${money(totalEnergySpend(m))}</div><div class="status">PG&E + delivered fuels</div></div>
+      <div class="metric"><div class="label">PG&E Due Now</div><div class="value">${money(m.amount_due_now)}</div><div class="status">Electric/gas billed now</div></div>
       <div class="metric ${ts[0]}"><div class="label">Current True-Up</div><div class="value moneybig">${money(m.trueup_balance)}</div><div class="status">${ts[1]}</div></div>
       <div class="metric ${tu.status}"><div class="label">True-Up Due</div><div class="value">${tu.due}</div><div class="status">${tu.text}</div></div>
-      <div class="metric warnbg"><div class="label">Energy Cost This Month</div><div class="value">${money(m.monthly_nem_charge)}</div><div class="status">Added to true-up</div></div>
+      <div class="metric warnbg"><div class="label">Electric Energy Cost</div><div class="value">${money(m.monthly_nem_charge)}</div><div class="status">Added to true-up</div></div>
+      <div class="metric"><div class="label">PG&E Gas</div><div class="value">${money(m.gas_cost)}</div><div class="status">${kwh(m.gas_therms)} therms</div></div>
+      <div class="metric"><div class="label">Delivered Fuels</div><div class="value">${money(deliveredFuelCost(m))}</div><div class="status">Propane / kerosene / other</div></div>
       <div class="metric ${os[0]}"><div class="label">Solar Offset</div><div class="value">${pct(m.solar_offset_percent)}</div><div class="status">${os[1]}</div></div>
       <div class="metric"><div class="label">Home Used</div><div class="value">${kwh(m.home_usage_kwh)} kWh</div></div>
       <div class="metric"><div class="label">Solar Produced</div><div class="value">${kwh(m.solar_produced_kwh)} kWh</div></div>
       <div class="metric"><div class="label">Grid Imported</div><div class="value">${kwh(m.grid_import_kwh)} kWh</div></div>
       <div class="metric"><div class="label">Grid Exported</div><div class="value">${kwh(m.grid_export_kwh)} kWh</div></div>
     </div>
-    <div class="summary small"><b>${p.name} summary:</b> ${monthName(m.bill_month)} bill was <b>${money(m.amount_due_now)}</b>. Solar covered <b>${pct(m.solar_offset_percent)}</b> of estimated home usage. Current true-up is <b>${money(m.trueup_balance)}</b>, due <b>${tu.due}</b>.</div>`})():`<div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">No monthly data yet</div></div><span class="due-pill">True-Up: ${monthLabel(p.trueup_month)}</span></div><p class="small">Go to Upload and load known data, or enter/edit manually.</p>`;
+    <div class="summary small"><b>${p.name} summary:</b> ${monthName(m.bill_month)} total captured energy spend was <b>${money(totalEnergySpend(m))}</b>. PG&E due now was <b>${money(m.amount_due_now)}</b>. Solar covered <b>${pct(m.solar_offset_percent)}</b> of estimated electric usage. Current true-up is <b>${money(m.trueup_balance)}</b>, due <b>${tu.due}</b>.</div>`})():`<div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">No monthly data yet</div></div><span class="due-pill">True-Up: ${monthLabel(p.trueup_month)}</span></div><p class="small">Go to Upload and load known data, or enter/edit manually.</p>`;
    const div=document.createElement('div');div.className='card property-card';div.innerHTML=html;box.appendChild(div);
  });
 }
@@ -222,7 +245,11 @@ function renderProperties(){
  properties.forEach(p=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<div class="row"><div><div class="title">${p.name}</div><div class="small">${p.address||''}</div><div class="small">${p.utility_company||''} • ${p.solar_company||''}</div></div><button class="danger" onclick="deleteProperty('${p.id}')">Delete</button></div>`;box.appendChild(d);});
 }
 function renderPropertyOptions(){const s=$('energyProperty');s.innerHTML='';properties.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;s.appendChild(o);});}
-function renderHistory(){const tb=$('historyRows');tb.innerHTML='';monthly.forEach(m=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${monthName(m.bill_month)}</td><td>${m.properties?.name||''}</td><td class="right">${kwh(m.solar_produced_kwh)}</td><td class="right">${kwh(m.home_usage_kwh)}</td><td class="right">${pct(m.solar_offset_percent)}</td><td class="right">${money(m.trueup_balance)}</td>`;tb.appendChild(tr);});}
+function renderHistory(){const tb=$('historyRows');tb.innerHTML='';monthly.forEach(m=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${monthName(m.bill_month)}</td><td>${m.properties?.name||''}</td><td class="right">${kwh(m.solar_produced_kwh)}</td><td class="right">${kwh(m.home_usage_kwh)}</td><td class="right">${pct(m.solar_offset_percent)}</td><td class="right">${money(m.trueup_balance)}</td><td class="right">${money(totalEnergySpend(m))}</td>`;tb.appendChild(tr);});}
+function renderHistoricalBills(){
+ const tb=$('historicalRows'); if(!tb) return; tb.innerHTML='';
+ historicalBills.forEach(b=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${b.statement_date||''}</td><td>${b.due_date||''}</td><td class="right">${money(b.current_electric_charges)}</td><td class="right">${money(b.current_gas_charges)}</td><td class="right">${money(b.total_nem_charges)}</td><td class="right">${money(b.total_amount_due)}</td><td>${b.notes||''}</td>`;tb.appendChild(tr);});
+}
 
 $('savePropBtn').onclick=async()=>{
  if(!$('propName').value.trim()) return alert('Property name is required.');
@@ -241,7 +268,7 @@ function previewCalc(){const solar=num('solarProduced'), imp=num('gridImport'), 
 $('saveEnergyBtn').onclick=async()=>{
  if(!$('energyProperty').value) return alert('Add/select a property first.');
  const bm=$('billMonth').value ? $('billMonth').value+'-01' : null; if(!bm) return alert('Bill month is required.');
- const payload={owner_id:user.id,property_id:$('energyProperty').value,bill_month:bm,billing_period_start:$('billStart').value||null,billing_period_end:$('billEnd').value||null,solar_produced_kwh:num('solarProduced'),grid_import_kwh:num('gridImport'),grid_export_kwh:num('gridExport'),monthly_nem_charge:num('nemCharge'),trueup_balance:num('trueupBalance'),electric_base_charge:num('baseCharge'),gas_cost:num('gasCost'),gas_therms:num('gasTherms'),amount_due_now:num('amountDue'),notes:$('energyNotes').value.trim()};
+ const payload={owner_id:user.id,property_id:$('energyProperty').value,bill_month:bm,billing_period_start:$('billStart').value||null,billing_period_end:$('billEnd').value||null,solar_produced_kwh:num('solarProduced'),grid_import_kwh:num('gridImport'),grid_export_kwh:num('gridExport'),monthly_nem_charge:num('nemCharge'),trueup_balance:num('trueupBalance'),electric_base_charge:num('baseCharge'),gas_cost:num('gasCost'),gas_therms:num('gasTherms'),amount_due_now:num('amountDue'),propane_cost:num('propaneCost'),propane_gallons:num('propaneGallons'),kerosene_cost:num('keroseneCost'),kerosene_gallons:num('keroseneGallons'),other_energy_cost:num('otherEnergyCost'),notes:$('energyNotes').value.trim()};
  const {error}=await sb.from('monthly_energy').upsert(payload,{onConflict:'owner_id,property_id,bill_month'}); if(error) alert(error.message); else {alert('Saved.'); await loadAll();}
 };
 
@@ -264,8 +291,8 @@ async function loadKnownJuneData(){
     const redding = await findOrCreateProperty({name:'Redding',address:'12465 Maria Dr',utility_company:'PG&E',solar_company:'Tesla',trueup_month:8,notes:'Created from June 2026 import'});
     const manteca = await findOrCreateProperty({name:'Manteca',address:'1631 Paola Pl',utility_company:'PG&E',solar_company:'Tesla',trueup_month:5,notes:'Created from June 2026 import'});
     const rows = [
-      {owner_id:user.id,property_id:redding.id,bill_month:'2026-06-01',billing_period_start:'2026-05-22',billing_period_end:'2026-06-22',solar_produced_kwh:1822.1,grid_import_kwh:1554.428,grid_export_kwh:781.880,monthly_nem_charge:323.13,trueup_balance:4827.60,electric_base_charge:25.39,gas_cost:0,gas_therms:0,amount_due_now:25.39,notes:'Imported from PG&E June 2026 bill + Tesla Redding screenshot analysis'},
-      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-06-01',billing_period_start:'2026-05-22',billing_period_end:'2026-06-22',solar_produced_kwh:0,grid_import_kwh:654.721,grid_export_kwh:643.818,monthly_nem_charge:3.55,trueup_balance:3.55,electric_base_charge:25.39,gas_cost:17.35,gas_therms:7,amount_due_now:42.74,notes:'Imported from PG&E June 2026 bill. Tesla Manteca production still needed.'}
+      {owner_id:user.id,property_id:redding.id,bill_month:'2026-06-01',billing_period_start:'2026-05-22',billing_period_end:'2026-06-22',solar_produced_kwh:1822.1,grid_import_kwh:1554.428,grid_export_kwh:781.880,monthly_nem_charge:323.13,trueup_balance:4827.60,electric_base_charge:25.39,gas_cost:0,gas_therms:0,amount_due_now:25.39,propane_cost:0,propane_gallons:0,kerosene_cost:0,kerosene_gallons:0,other_energy_cost:0,notes:'Imported from PG&E June 2026 bill + Tesla Redding screenshot analysis. Propane/kerosene not included in PG&E bill.'},
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-06-01',billing_period_start:'2026-05-22',billing_period_end:'2026-06-22',solar_produced_kwh:771.0,grid_import_kwh:654.721,grid_export_kwh:643.818,monthly_nem_charge:3.55,trueup_balance:3.55,electric_base_charge:25.39,gas_cost:17.35,gas_therms:7,amount_due_now:42.74,propane_cost:0,propane_gallons:0,kerosene_cost:0,kerosene_gallons:0,other_energy_cost:0,notes:'Imported from PG&E June 2026 bill + Tesla Manteca screenshots. June solar production: 771.0 kWh.'}
     ];
     const {error} = await sb.from('monthly_energy').upsert(rows,{onConflict:'owner_id,property_id,bill_month'});
     if(error) throw error;
@@ -274,10 +301,41 @@ async function loadKnownJuneData(){
     document.querySelector('[data-view="dashboardView"]').classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     $('dashboardView').classList.remove('hidden');
-    alert('June 2026 data loaded. Manteca solar production is still set to 0 until we import your Tesla screenshots.');
+    alert('June 2026 data loaded, including Manteca Tesla solar production.');
   }catch(e){ alert(e.message || e); }
 }
+
+async function loadHistoricalPgeBills(){
+  if(!user) return alert('Please log in first.');
+  if(!confirm('Load the historical PG&E account-level bill summaries from the uploaded PDFs?')) return;
+  const rows=[
+    {owner_id:user.id,statement_date:'2025-04-23',due_date:null,billing_month:'2025-04-01',current_electric_charges:30.99,current_gas_charges:103.76,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
+    {owner_id:user.id,statement_date:'2025-05-22',due_date:null,billing_month:'2025-05-01',current_electric_charges:16.44,current_gas_charges:79.73,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
+    {owner_id:user.id,statement_date:'2025-06-24',due_date:null,billing_month:'2025-06-01',current_electric_charges:30.12,current_gas_charges:86.57,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
+    {owner_id:user.id,statement_date:'2025-07-24',due_date:null,billing_month:'2025-07-01',current_electric_charges:50.53,current_gas_charges:78.23,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
+    {owner_id:user.id,statement_date:'2025-08-22',due_date:null,billing_month:'2025-08-01',current_electric_charges:220.97,current_gas_charges:75.12,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
+    {owner_id:user.id,statement_date:'2025-09-23',due_date:'2025-10-14',billing_month:'2025-09-01',current_electric_charges:117.86,current_gas_charges:26.23,total_nem_charges:0,total_amount_due:167.48,source_file:'PG&E Sept 2025.pdf',notes:'Account-level statement summary.'},
+    {owner_id:user.id,statement_date:'2025-10-23',due_date:'2025-11-13',billing_month:'2025-10-01',current_electric_charges:24.20,current_gas_charges:23.92,total_nem_charges:0,total_amount_due:-68.34,source_file:'PG&E Oct 2025.pdf',notes:'Credit balance / no payment due.'},
+    {owner_id:user.id,statement_date:'2025-11-22',due_date:'2025-12-15',billing_month:'2025-11-01',current_electric_charges:24.20,current_gas_charges:50.44,total_nem_charges:0,total_amount_due:6.30,source_file:'PG&E Nov 2025.pdf',notes:'Account-level statement summary after prior credit.'},
+    {owner_id:user.id,statement_date:'2025-12-24',due_date:'2026-01-15',billing_month:'2025-12-01',current_electric_charges:25.00,current_gas_charges:208.22,total_nem_charges:0,total_amount_due:233.22,source_file:'PG&E Dec 2025.pdf',notes:'Account-level statement summary.'},
+    {owner_id:user.id,statement_date:'2026-01-25',due_date:'2026-02-17',billing_month:'2026-01-01',current_electric_charges:25.00,current_gas_charges:98.59,total_nem_charges:0,total_amount_due:123.59,source_file:'PG&E Jan/Feb 2026 upload',notes:'Account-level statement summary.'},
+    {owner_id:user.id,statement_date:'2026-02-25',due_date:'2026-03-18',billing_month:'2026-02-01',current_electric_charges:25.80,current_gas_charges:192.31,total_nem_charges:0,total_amount_due:218.11,source_file:'PG&E Feb 2026.pdf',notes:'Account-level statement summary.'},
+    {owner_id:user.id,statement_date:'2026-03-26',due_date:'2026-04-16',billing_month:'2026-03-01',current_electric_charges:42.12,current_gas_charges:36.87,total_nem_charges:0,total_amount_due:78.99,source_file:'PG&E March 2026.pdf',notes:'Account-level statement summary.'},
+    {owner_id:user.id,statement_date:'2026-04-24',due_date:'2026-05-15',billing_month:'2026-04-01',current_electric_charges:46.02,current_gas_charges:14.21,total_nem_charges:0,total_amount_due:13.97,source_file:'PG&E April 2026.pdf',notes:'Includes gas CA Climate Credit adjustment.'},
+    {owner_id:user.id,statement_date:'2026-05-24',due_date:'2026-06-15',billing_month:'2026-05-01',current_electric_charges:46.02,current_gas_charges:16.74,total_nem_charges:3662.80,total_amount_due:3725.56,source_file:'PG&E May 2026.pdf',notes:'Major NEM true-up bill.'},
+    {owner_id:user.id,statement_date:'2026-06-24',due_date:'2026-07-15',billing_month:'2026-06-01',current_electric_charges:50.78,current_gas_charges:17.35,total_nem_charges:0,total_amount_due:68.13,source_file:'PG&E June 2026.pdf',notes:'Current bill imported separately into property monthly data too.'}
+  ];
+  try{
+    const {error}=await sb.from('historical_bills').upsert(rows,{onConflict:'owner_id,statement_date'});
+    if(error) throw error;
+    await loadAll();
+    if($('importStatus')) $('importStatus').textContent='Historical PG&E account-level bills loaded.';
+    alert('Historical PG&E bill summaries loaded.');
+  }catch(e){alert('Historical import failed: '+(e.message||e));}
+}
+
 if($('loadJuneBtn')) $('loadJuneBtn').onclick=loadKnownJuneData;
+if($('loadHistoryBtn')) $('loadHistoryBtn').onclick=loadHistoricalPgeBills;
 
 $('refreshBtn').onclick=loadAll;
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));$(b.dataset.view).classList.remove('hidden');});

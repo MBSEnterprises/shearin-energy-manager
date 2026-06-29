@@ -47,7 +47,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 1.2 • UI Polish</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 1.4 • Tesla History</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -153,13 +153,14 @@
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 1.2 keeps the property setup controls and adds consistent currency formatting for property-specific energy sources and distinguishes monthly utilities from event-based delivered fuels. It keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 1.4 expands Tesla history from the Redding and Manteca screenshots. Exact monthly values are used where shown; graph-estimated 2026 monthly values are clearly marked in row notes. PG&E remains the billing source; Tesla remains the production source.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
         <button id="loadJuneBtn" style="margin-top:12px">Load / Repair June 2026 Known Data</button>
         <button id="loadHistoryBtn" class="secondary" style="margin-top:12px">Load Historical PG&amp;E Bills</button>
         <button id="loadSourcesBtn" class="secondary" style="margin-top:12px">Load / Repair Property Source Setup</button>
+        <button id="loadTeslaHistoryBtn" class="secondary" style="margin-top:12px">Load Tesla Historical Data</button>
         <p class="small" id="importStatus"></p>
       </div>
 
@@ -171,8 +172,8 @@
         </div>
         <div class="card">
           <div class="title">☀️ Tesla Screenshots</div>
-          <p class="small">Coming next: upload Tesla screenshots for Redding or Manteca and confirm solar production numbers.</p>
-          <button class="secondary" disabled>Upload Tesla screenshots soon</button>
+          <p class="small">Tesla historical loader is available now for confirmed values. Screenshot upload/review is still coming next.</p>
+          <button class="secondary" disabled>Screenshot upload soon</button>
         </div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -185,7 +186,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 1.2 fixes source configuration and currency polish: Manteca only shows electric, solar, and PG&E gas; Redding shows electric and solar monthly, with propane/kerosene as event-based delivered fuels only when there is a delivery. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 1.4 keeps source configuration and currency polish, and expands Tesla historical production support. PG&E rows track billing/import/export; Tesla rows fill solar production by property/month when confirmed data exists.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -235,7 +236,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 1.2':'Build 1.2 • UI Polish'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 1.2':'Build 1.4 • Tesla History'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -603,6 +604,79 @@ async function loadSourceConfigurationOnly(){
  alert('Property source setup loaded. Redding: electric, solar, propane, kerosene. Manteca: electric, solar, natural gas.');
 }
 
+function confirmedTeslaHistoryRows(redding, manteca){
+  // Tesla screenshot import, v1.4.
+  // Exact monthly totals are only available for June 2026 from the Month screenshots.
+  // Jan-May 2026 values below are estimates from the Tesla Year graph, scaled to the displayed 2026 total.
+  // Keep the note on every estimated row so reports do not pretend these are meter-grade exact values.
+  return [
+    {property: redding, bill_month:'2026-01-01', solar_produced_kwh:620.0, notes:'Tesla estimated production from 2026 Year screenshot: Redding Jan 2026 ≈ 620.0 kWh.'},
+    {property: redding, bill_month:'2026-02-01', solar_produced_kwh:700.0, notes:'Tesla estimated production from 2026 Year screenshot: Redding Feb 2026 ≈ 700.0 kWh.'},
+    {property: redding, bill_month:'2026-03-01', solar_produced_kwh:1290.0, notes:'Tesla estimated production from 2026 Year screenshot: Redding Mar 2026 ≈ 1,290.0 kWh.'},
+    {property: redding, bill_month:'2026-04-01', solar_produced_kwh:1320.0, notes:'Tesla estimated production from 2026 Year screenshot: Redding Apr 2026 ≈ 1,320.0 kWh.'},
+    {property: redding, bill_month:'2026-05-01', solar_produced_kwh:1647.9, notes:'Tesla estimated production from 2026 Year screenshot: Redding May 2026 ≈ 1,647.9 kWh. Jan-May adjusted so Jan-Jun totals approximately 7.4 MWh.'},
+    {property: redding, bill_month:'2026-06-01', solar_produced_kwh:1822.1, notes:'Tesla confirmed Month screenshot: Redding June 2026 = 1,822.1 kWh. Year screenshot shows 2026 total about 7.4 MWh.'},
+    {property: manteca, bill_month:'2026-01-01', solar_produced_kwh:456.0, notes:'Tesla estimated production from 2026 Year screenshot: Manteca Jan 2026 ≈ 456.0 kWh.'},
+    {property: manteca, bill_month:'2026-02-01', solar_produced_kwh:520.0, notes:'Tesla estimated production from 2026 Year screenshot: Manteca Feb 2026 ≈ 520.0 kWh.'},
+    {property: manteca, bill_month:'2026-03-01', solar_produced_kwh:780.0, notes:'Tesla estimated production from 2026 Year screenshot: Manteca Mar 2026 ≈ 780.0 kWh.'},
+    {property: manteca, bill_month:'2026-04-01', solar_produced_kwh:760.0, notes:'Tesla estimated production from 2026 Year screenshot: Manteca Apr 2026 ≈ 760.0 kWh.'},
+    {property: manteca, bill_month:'2026-05-01', solar_produced_kwh:839.5, notes:'Tesla estimated production from 2026 Year screenshot: Manteca May 2026 ≈ 839.5 kWh. Jan-May adjusted so Jan-Jun total equals the displayed 4,126.5 kWh.'},
+    {property: manteca, bill_month:'2026-06-01', solar_produced_kwh:771.0, notes:'Tesla confirmed Month screenshot: Manteca June 2026 = 771.0 kWh. Year screenshot shows 2026 total = 4,126.5 kWh.'}
+  ];
+}
+
+function mergeTeslaIntoRows(rows){
+  // If a row already has Tesla/solar production, keep it when PG&E history is reloaded.
+  return rows.map(row=>{
+    const existing = monthly.find(m => m.property_id===row.property_id && monthKey(m.bill_month)===monthKey(row.bill_month));
+    if(existing && Number(existing.solar_produced_kwh||0)>0){
+      return {...row, solar_produced_kwh:Number(existing.solar_produced_kwh||0), notes:(row.notes||'')+' Tesla solar production preserved from existing property row.'};
+    }
+    return row;
+  });
+}
+
+async function loadTeslaHistoricalData(){
+  if(!user) return alert('Please log in first.');
+  if(!confirm('Load Tesla historical production into property history? June values are exact from the Month screenshots; Jan-May 2026 values are estimates from the Year screenshots and will be marked as estimated in row notes. PG&E billing amounts will not change.')) return;
+  try{
+    await loadAll();
+    const redding = await findOrCreateProperty({name:'Redding',address:'12465 Maria Dr',utility_company:'PG&E',solar_company:'Tesla',trueup_month:8,notes:'Redding property'});
+    const manteca = await findOrCreateProperty({name:'Manteca',address:'1631 Paola Pl',utility_company:'PG&E',solar_company:'Tesla',trueup_month:5,notes:'Manteca property'});
+    await upsertDefaultSourceConfig(redding,manteca);
+    const teslaRows = confirmedTeslaHistoryRows(redding,manteca).map(x=>{
+      const existing = monthly.find(m => m.property_id===x.property.id && monthKey(m.bill_month)===monthKey(x.bill_month));
+      return {
+        owner_id:user.id,
+        property_id:x.property.id,
+        bill_month:x.bill_month,
+        billing_period_start:existing?.billing_period_start || null,
+        billing_period_end:existing?.billing_period_end || null,
+        solar_produced_kwh:x.solar_produced_kwh,
+        grid_import_kwh:Number(existing?.grid_import_kwh||0),
+        grid_export_kwh:Number(existing?.grid_export_kwh||0),
+        monthly_nem_charge:Number(existing?.monthly_nem_charge||0),
+        trueup_balance:Number(existing?.trueup_balance||0),
+        electric_base_charge:Number(existing?.electric_base_charge||0),
+        gas_cost:Number(existing?.gas_cost||0),
+        gas_therms:Number(existing?.gas_therms||0),
+        amount_due_now:Number(existing?.amount_due_now||0),
+        propane_cost:Number(existing?.propane_cost||0),
+        propane_gallons:Number(existing?.propane_gallons||0),
+        kerosene_cost:Number(existing?.kerosene_cost||0),
+        kerosene_gallons:Number(existing?.kerosene_gallons||0),
+        other_energy_cost:Number(existing?.other_energy_cost||0),
+        notes: existing?.notes ? existing.notes+' '+x.notes : x.notes
+      };
+    });
+    const {error}=await sb.from('monthly_energy').upsert(teslaRows,{onConflict:'owner_id,property_id,bill_month'});
+    if(error) throw error;
+    await loadAll();
+    if($('importStatus')) $('importStatus').textContent='Tesla historical data loaded. June values are exact; Jan-May 2026 values are graph-estimated and marked in notes. PG&E billing amounts were preserved.';
+    alert('Tesla history loaded for Redding and Manteca. June is exact; Jan-May 2026 is estimated from Tesla Year graphs and marked in notes.');
+  }catch(e){ alert('Tesla history load failed: '+(e.message||e)); }
+}
+
 async function loadKnownJuneData(){
   if(!user) return alert('Please log in first.');
   if(!confirm('Load the June 2026 Redding and Manteca data we already extracted? This will update June if it already exists.')) return;
@@ -700,7 +774,8 @@ async function loadHistoricalPgeBills(){
 
     // Replace only prior app-imported historical rows, not manually edited user rows or current June known-data rows.
     // Upsert will update matching months and insert missing property rows.
-    result=await sb.from('monthly_energy').upsert(historicalMonthlyRows,{onConflict:'owner_id,property_id,bill_month'});
+    const mergedHistoricalMonthlyRows = mergeTeslaIntoRows(historicalMonthlyRows);
+    result=await sb.from('monthly_energy').upsert(mergedHistoricalMonthlyRows,{onConflict:'owner_id,property_id,bill_month'});
     if(result.error) throw result.error;
     await loadAll();
     if($('importStatus')) $('importStatus').textContent='Historical PG&E data integrity load complete: account totals plus property-level rows and property source setup.';
@@ -711,6 +786,7 @@ async function loadHistoricalPgeBills(){
 if($('loadJuneBtn')) $('loadJuneBtn').onclick=loadKnownJuneData;
 if($('loadHistoryBtn')) $('loadHistoryBtn').onclick=loadHistoricalPgeBills;
 if($('loadSourcesBtn')) $('loadSourcesBtn').onclick=loadSourceConfigurationOnly;
+if($('loadTeslaHistoryBtn')) $('loadTeslaHistoryBtn').onclick=loadTeslaHistoricalData;
 
 if($('prevMonthBtn')) $('prevMonthBtn').onclick=()=>{selectedMonth=addMonths(selectedMonth,-1);renderTimeline();};
 if($('nextMonthBtn')) $('nextMonthBtn').onclick=()=>{selectedMonth=addMonths(selectedMonth,1);renderTimeline();};

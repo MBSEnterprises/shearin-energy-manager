@@ -27,7 +27,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.6 • Timeline</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.6.1 • Dashboard + Timeline Fix</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -109,6 +109,7 @@
           <div class="month-title" id="selectedMonthTitle">Month</div>
           <button class="secondary" id="nextMonthBtn">▶</button>
         </div>
+        <div id="timelineScopeFilter" class="prop-tabs" style="margin-top:10px"></div>
         <div id="timelineMonthCards" class="grid cards"></div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -173,7 +174,7 @@
 const cfg = window.ENERGY_CONFIG || {};
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE_') && cfg.SUPABASE_ANON_KEY && !cfg.SUPABASE_ANON_KEY.includes('PASTE_');
 const sb = configured ? supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
-let session=null, user=null, properties=[], monthly=[], historicalBills=[], selectedProperty='combined', selectedMonth=null;
+let session=null, user=null, properties=[], monthly=[], historicalBills=[], selectedProperty='combined', selectedTimelineScope='combined', selectedMonth=null;
 const $=id=>document.getElementById(id);
 const money=n=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:0});
 const val=(obj,key)=>Number((obj&&obj[key])||0);
@@ -191,7 +192,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.6':'Build 0.6 • Timeline'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.6':'Build 0.6.1 • Dashboard + Timeline Fix'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -304,16 +305,23 @@ function getAllMonths(){
 }
 function accountBillForMonth(key){return historicalBills.find(b=>monthKey(b.billing_month||b.statement_date)===key)}
 function propertyRowsForMonth(key){return monthly.filter(m=>monthKey(m.bill_month)===key).sort((a,b)=>(a.properties?.name||'').localeCompare(b.properties?.name||''));}
+function renderTimelineScopeFilter(){
+ const t=$('timelineScopeFilter'); if(!t) return; t.innerHTML='';
+ const buttons=[{id:'combined',name:'Combined / PG&E Account'},...properties.map(p=>({id:p.id,name:p.name}))];
+ buttons.forEach(b=>{const el=document.createElement('button');el.className='prop-tab '+(selectedTimelineScope===b.id?'active':'');el.textContent=b.name;el.onclick=()=>{selectedTimelineScope=b.id;renderTimeline();};t.appendChild(el);});
+}
 function renderTimeline(){
+ renderTimelineScopeFilter();
  const months=getAllMonths();
  if(!selectedMonth) selectedMonth=months[0]||isoMonth();
  const title=$('selectedMonthTitle'); if(title) title.textContent=fullMonthName(selectedMonth+'-01');
  const count=$('historyCount'); if(count) count.textContent=months.length+' months';
  const cards=$('timelineMonthCards'); if(cards){
    cards.innerHTML='';
-   const bill=accountBillForMonth(selectedMonth);
-   const rows=propertyRowsForMonth(selectedMonth);
-   if(!bill && !rows.length){cards.innerHTML='<div class="notice">No data saved for this month yet.</div>';}
+   const bill= selectedTimelineScope==='combined' ? accountBillForMonth(selectedMonth) : null;
+   const allRows=propertyRowsForMonth(selectedMonth);
+   const rows= selectedTimelineScope==='combined' ? allRows : allRows.filter(r=>r.property_id===selectedTimelineScope);
+   if(!bill && !rows.length){cards.innerHTML='<div class="notice">No data saved for this month/scope yet. Use the scope buttons above to switch between Combined, Redding, and Manteca.</div>';}
    if(bill){
      const isTrueup=Number(bill.total_nem_charges||0)>500 || String(bill.notes||'').toLowerCase().includes('true-up');
      const div=document.createElement('div'); div.className='card '+(isTrueup?'property-card':'');
@@ -344,11 +352,13 @@ function renderTimeline(){
  const list=$('timelineList'); if(list){
    list.innerHTML='';
    months.forEach(key=>{
-    const b=accountBillForMonth(key); const rows=propertyRowsForMonth(key);
+    const b= selectedTimelineScope==='combined' ? accountBillForMonth(key) : null; const allRows=propertyRowsForMonth(key); const rows= selectedTimelineScope==='combined' ? allRows : allRows.filter(r=>r.property_id===selectedTimelineScope);
+    if(selectedTimelineScope!=='combined' && !rows.length) return;
     const amt=b?Number(b.total_amount_due||0):rows.reduce((s,r)=>s+totalEnergySpend(r),0);
     const isTrueup=b&&(Number(b.total_nem_charges||0)>500 || String(b.notes||'').toLowerCase().includes('true-up'));
+    const scopeName=selectedTimelineScope==='combined'?'Combined / PG&E Account':(properties.find(p=>p.id===selectedTimelineScope)?.name||'Property');
     const item=document.createElement('button'); item.className='timeline-item '+(key===selectedMonth?'active ':'')+(isTrueup?'trueup':'');
-    item.innerHTML=`<div><b>${fullMonthName(key+'-01')}</b><div class="mini">${b?'PG&E bill':''}${b&&rows.length?' • ':''}${rows.length?rows.length+' property row(s)':''}</div></div><div style="text-align:right"><b>${money(amt)}</b><div class="mini">${isTrueup?'TRUE-UP':''}</div></div>`;
+    item.innerHTML=`<div><b>${fullMonthName(key+'-01')}</b><div class="mini">${scopeName}${b?' • PG&E bill':''}${rows.length?' • '+rows.length+' property row(s)':''}</div></div><div style="text-align:right"><b>${money(amt)}</b><div class="mini">${isTrueup?'TRUE-UP':''}</div></div>`;
     item.onclick=()=>{selectedMonth=key;renderTimeline();};
     list.appendChild(item);
    });

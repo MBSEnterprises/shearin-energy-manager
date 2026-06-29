@@ -21,13 +21,14 @@
     .prop-tabs{display:flex;gap:8px;overflow:auto;margin:0 0 12px;padding-bottom:2px}.prop-tab{white-space:nowrap;background:#e2e8f0;color:#0f172a;border-radius:999px;padding:9px 12px;font-size:14px}.prop-tab.active{background:var(--brand);color:white}.metric.goodbg{background:#ecfdf5;border-color:#a7f3d0}.metric.warnbg{background:#fffbeb;border-color:#fde68a}.metric.badbg{background:#fef2f2;border-color:#fecaca}.metric .status{font-size:12px;font-weight:800;margin-top:4px}.summary{margin-top:12px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;line-height:1.35}.moneybig{font-size:28px!important}.due-pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#f1f5f9;color:#334155;font-weight:800;font-size:12px}.month-nav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 0}.month-title{font-size:22px;font-weight:900}.timeline-list{display:grid;gap:8px}.timeline-item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px}.timeline-item.active{border-color:var(--brand);background:#ecfdf5}.timeline-item.trueup{border-color:#f59e0b;background:#fffbeb}.mini{font-size:12px;color:var(--muted)}.badge{border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900;background:#e2e8f0}.badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left} th{color:var(--muted);font-size:12px}.right{text-align:right}.pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#e0f2fe;color:#075985;font-weight:800;font-size:12px}.auth{max-width:460px;margin:36px auto}.hero{font-size:30px;font-weight:900;line-height:1.05;margin-bottom:8px}
     @media(min-width:760px){.grid.cards{grid-template-columns:1fr 1fr}.form-grid.desktop{grid-template-columns:1fr 1fr}.tabs{left:50%;transform:translateX(-50%);max-width:980px;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0}.metrics{grid-template-columns:repeat(3,1fr)}.wide{grid-column:auto}}
-  </style>
+  .combined-summary{border-color:#0f766e}.breakdown{font-size:16px}.break-row{display:flex;justify-content:space-between;gap:12px;margin:4px 0}.hidden{display:none!important}
+</style>
 </head>
 <body>
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.6.2 • Version Label Fix</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.7 • Bill Tie-Out</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -121,7 +122,7 @@
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 0.6.2 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 0.7 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
@@ -152,7 +153,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.6.2 adds Timeline so you can move through previous months, see PG&E account history, and spot true-up events. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 0.7 adds a bill-first combined dashboard and Timeline so you can move through previous months, see PG&E account history, and spot true-up events. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -192,7 +193,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.6.2':'Build 0.6.2 • Version Label Fix'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.6.2':'Build 0.7 • Bill Tie-Out'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -236,7 +237,7 @@ async function loadAll(){
  }
 }
 
-function renderAll(){sortProperties();if(!selectedMonth) selectedMonth=getAllMonths()[0]||isoMonth();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();renderHistoricalBills();renderTimeline();previewCalc();}
+function renderAll(){sortProperties();if($('seedBtn')) $('seedBtn').classList.toggle('hidden',properties.length>0);if(!selectedMonth) selectedMonth=getAllMonths()[0]||isoMonth();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();renderHistoricalBills();renderTimeline();previewCalc();}
 function sortProperties(){properties.sort((a,b)=>{const order={redding:1,manteca:2};return (order[a.name.toLowerCase()]||99)-(order[b.name.toLowerCase()]||99)||a.name.localeCompare(b.name);});}
 function latestFor(propId){return monthly.filter(x=>x.property_id===propId).sort((a,b)=>b.bill_month.localeCompare(a.bill_month))[0]}
 function monthLabel(num){return num?new Date(2024,num-1,1).toLocaleDateString(undefined,{month:'long'}):'Unknown'}
@@ -258,6 +259,49 @@ function renderPropertyTabs(){
  const buttons=[{id:'combined',name:'Combined'},...properties.map(p=>({id:p.id,name:p.name}))];
  buttons.forEach(b=>{const el=document.createElement('button');el.className='prop-tab '+(selectedProperty===b.id?'active':'');el.textContent=b.name;el.onclick=()=>{selectedProperty=b.id;renderDashboard();};t.appendChild(el);});
 }
+
+function latestMonthKey(){
+ const months=getAllMonths();
+ return months[0] || monthKey(monthly[0]?.bill_month) || isoMonth();
+}
+function latestAccountBill(){
+ const key=latestMonthKey();
+ return accountBillForMonth(key) || historicalBills[0] || null;
+}
+function rowsForDashboardMonth(){
+ const key=latestMonthKey();
+ return monthly.filter(m=>monthKey(m.bill_month)===key);
+}
+function renderCombinedSummary(box){
+ const key=latestMonthKey();
+ const bill=latestAccountBill();
+ const rows=rowsForDashboardMonth();
+ const totalDue = bill && bill.total_amount_due!==null && bill.total_amount_due!==undefined ? Number(bill.total_amount_due||0) : rows.reduce((s,r)=>s+Number(r.amount_due_now||0),0);
+ const totalEnergy = rows.reduce((s,r)=>s+totalEnergySpend(r),0);
+ const totalSolar = rows.reduce((s,r)=>s+Number(r.solar_produced_kwh||0),0);
+ const totalHome = rows.reduce((s,r)=>s+Number(r.home_usage_kwh||0),0);
+ const totalTrueup = rows.reduce((s,r)=>s+Number(r.trueup_balance||0),0);
+ const offset = totalHome>0 ? totalSolar/totalHome*100 : 0;
+ const dueStatus = totalDue<=0?'goodbg':totalDue<=100?'warnbg':'badbg';
+ const div=document.createElement('div');
+ div.className='card property-card combined-summary';
+ const breakdown = rows.map(r=>`<div class="break-row"><span>${r.properties?.name||properties.find(p=>p.id===r.property_id)?.name||'Property'}</span><b>${money(r.amount_due_now)}</b></div>`).join('') || '<div class="small">No property breakdown saved for this month.</div>';
+ div.innerHTML=`
+  <div class="row"><div><div class="title">🏡 Combined Portfolio</div><div class="small">${fullMonthName(key+'-01')} • bill-first summary</div></div><span class="due-pill">PG&E bill tie-out</span></div>
+  <div class="metrics">
+    <div class="metric ${dueStatus}"><div class="label">PG&E Total Due</div><div class="value moneybig">${money(totalDue)}</div><div class="status">Should match page 1 of bill</div></div>
+    <div class="metric"><div class="label">Property Breakdown</div><div class="status breakdown">${breakdown}</div></div>
+    <div class="metric"><div class="label">Total Captured Energy Spend</div><div class="value">${money(totalEnergy)}</div><div class="status">PG&E + delivered fuels</div></div>
+    <div class="metric ${trueupStatus(totalTrueup,2)[0]}"><div class="label">True-Up Exposure</div><div class="value">${money(totalTrueup)}</div><div class="status">Combined current balances</div></div>
+    <div class="metric ${offsetStatus(offset)[0]}"><div class="label">Portfolio Solar Offset</div><div class="value">${pct(offset)}</div><div class="status">Goal is zero-bill performance</div></div>
+    <div class="metric"><div class="label">Solar Produced</div><div class="value">${kwh(totalSolar)} kWh</div></div>
+    <div class="metric"><div class="label">Home Used</div><div class="value">${kwh(totalHome)} kWh</div></div>
+    <div class="metric"><div class="label">PG&E Account Source</div><div class="value">${bill?money(bill.total_amount_due):'—'}</div><div class="status">${bill?('Statement '+(bill.statement_date||'')):'No account bill loaded'}</div></div>
+  </div>
+  <div class="summary small"><b>Bill check:</b> the combined PG&E total due is <b>${money(totalDue)}</b>. The property rows currently total <b>${money(rows.reduce((s,r)=>s+Number(r.amount_due_now||0),0))}</b>${bill?' and the imported PG&E account bill says <b>'+money(bill.total_amount_due)+'</b>.':''}</div>`;
+ box.appendChild(div);
+}
+
 function renderDashboard(){
  renderPropertyTabs();
  const box=$('dashboardCards'); box.innerHTML='';

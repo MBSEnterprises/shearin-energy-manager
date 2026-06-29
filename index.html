@@ -18,6 +18,7 @@
     input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:16px;background:white} label{font-size:13px;font-weight:750;display:block;margin:10px 0 5px}.form-grid{display:grid;gap:8px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
     .tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}.tab{background:transparent;color:var(--muted);padding:8px 4px;font-size:12px;border-radius:12px}.tab.active{background:#ccfbf1;color:#134e4a}.tab span{display:block;font-size:20px;line-height:20px;margin-bottom:2px}
     .notice{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px}.good{color:var(--good)}.bad{color:var(--bad)}.muted{color:var(--muted)}
+    .prop-tabs{display:flex;gap:8px;overflow:auto;margin:0 0 12px;padding-bottom:2px}.prop-tab{white-space:nowrap;background:#e2e8f0;color:#0f172a;border-radius:999px;padding:9px 12px;font-size:14px}.prop-tab.active{background:var(--brand);color:white}.metric.goodbg{background:#ecfdf5;border-color:#a7f3d0}.metric.warnbg{background:#fffbeb;border-color:#fde68a}.metric.badbg{background:#fef2f2;border-color:#fecaca}.metric .status{font-size:12px;font-weight:800;margin-top:4px}.summary{margin-top:12px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;line-height:1.35}.moneybig{font-size:28px!important}.due-pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#f1f5f9;color:#334155;font-weight:800;font-size:12px}
     table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left} th{color:var(--muted);font-size:12px}.right{text-align:right}.pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#e0f2fe;color:#075985;font-weight:800;font-size:12px}.auth{max-width:460px;margin:36px auto}.hero{font-size:30px;font-weight:900;line-height:1.05;margin-bottom:8px}
     @media(min-width:760px){.grid.cards{grid-template-columns:1fr 1fr}.form-grid.desktop{grid-template-columns:1fr 1fr}.tabs{left:50%;transform:translateX(-50%);max-width:980px;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0}.metrics{grid-template-columns:repeat(3,1fr)}.wide{grid-column:auto}}
   </style>
@@ -26,7 +27,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.2 Upload-first</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.4 Financial dashboard</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -45,7 +46,8 @@
 
   <section id="appView" class="hidden">
     <section id="dashboardView" class="view">
-      <div class="row wraprow" style="margin-bottom:12px"><div><div class="title">Dashboard</div><div class="small">Latest saved month for each property • upload-first workflow</div></div><button id="seedBtn" class="secondary">Add starter properties</button></div>
+      <div class="row wraprow" style="margin-bottom:12px"><div><div class="title">Dashboard</div><div class="small">Latest saved month • bill-first dashboard • true-up countdown</div></div><button id="seedBtn" class="secondary">Add starter properties</button></div>
+      <div id="propertyFilter" class="prop-tabs"></div>
       <div id="dashboardCards" class="grid cards"></div>
     </section>
 
@@ -94,11 +96,11 @@
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 0.2 starts the real workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 0.4 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
-          For this build, use the button below to load the June 2026 data we already extracted from your PG&E bill and Tesla screenshots. Next build will add file upload + review/accept.
+          Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
-        <button id="loadJuneBtn" style="margin-top:12px">Load June 2026 Known Data</button>
+        <button id="loadJuneBtn" style="margin-top:12px">Load / Repair June 2026 Known Data</button>
       </div>
 
       <div class="grid cards" style="margin-top:12px">
@@ -118,7 +120,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.2 starts the upload-first workflow. Manual editing remains available as the fallback when an import needs correction.</p>
+        <p class="small">Build 0.4 adds bill-first financial cards, property tabs, true-up due dates, and conditional status colors. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -139,7 +141,7 @@
 const cfg = window.ENERGY_CONFIG || {};
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE_') && cfg.SUPABASE_ANON_KEY && !cfg.SUPABASE_ANON_KEY.includes('PASTE_');
 const sb = configured ? supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
-let session=null, user=null, properties=[], monthly=[];
+let session=null, user=null, properties=[], monthly=[], selectedProperty='combined';
 const $=id=>document.getElementById(id);
 const money=n=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:0});
 const kwh=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
@@ -151,7 +153,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.1':'Build 0.2 Upload-first'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.4':'Build 0.4 Financial dashboard'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -169,23 +171,49 @@ async function loadAll(){
  renderAll();
 }
 
-function renderAll(){renderDashboard();renderProperties();renderPropertyOptions();renderHistory();previewCalc();}
+function renderAll(){sortProperties();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();previewCalc();}
+function sortProperties(){properties.sort((a,b)=>{const order={redding:1,manteca:2};return (order[a.name.toLowerCase()]||99)-(order[b.name.toLowerCase()]||99)||a.name.localeCompare(b.name);});}
 function latestFor(propId){return monthly.filter(x=>x.property_id===propId).sort((a,b)=>b.bill_month.localeCompare(a.bill_month))[0]}
+function monthLabel(num){return num?new Date(2024,num-1,1).toLocaleDateString(undefined,{month:'long'}):'Unknown'}
+function trueupInfo(p,m){
+ if(!p.trueup_month || !m?.bill_month) return {due:'Unknown',cycles:null,status:'warnbg',text:'Set true-up month'};
+ const d=new Date(m.bill_month+'T00:00:00'); const billY=d.getFullYear(), billM=d.getMonth()+1; let dueY=billY;
+ if(billM>Number(p.trueup_month)) dueY++;
+ const cycles=(dueY-billY)*12 + Number(p.trueup_month)-billM;
+ const due=monthLabel(Number(p.trueup_month))+' '+dueY;
+ const status=cycles<=1?'badbg':cycles<=4?'warnbg':'goodbg';
+ const text=cycles===0?'Due this cycle':cycles===1?'1 billing cycle remaining':cycles+' billing cycles remaining';
+ return {due,cycles,status,text};
+}
+function billStatus(amount){amount=Number(amount||0); if(amount<=0) return ['goodbg','On target']; if(amount<=50) return ['warnbg','Low bill']; return ['badbg','Higher bill'];}
+function trueupStatus(balance,cycles){balance=Number(balance||0); if(balance<=100) return ['goodbg','Low balance']; if(balance>1000 && cycles!==null && cycles<=4) return ['badbg','Budget now']; return ['warnbg','Watch balance'];}
+function offsetStatus(offset){offset=Number(offset||0); if(offset>=100) return ['goodbg','Goal met']; if(offset>=70) return ['warnbg','Short of zero-bill goal']; return ['badbg','Needs attention'];}
+function renderPropertyTabs(){
+ const t=$('propertyFilter'); if(!t) return; t.innerHTML='';
+ const buttons=[{id:'combined',name:'Combined'},...properties.map(p=>({id:p.id,name:p.name}))];
+ buttons.forEach(b=>{const el=document.createElement('button');el.className='prop-tab '+(selectedProperty===b.id?'active':'');el.textContent=b.name;el.onclick=()=>{selectedProperty=b.id;renderDashboard();};t.appendChild(el);});
+}
 function renderDashboard(){
+ renderPropertyTabs();
  const box=$('dashboardCards'); box.innerHTML='';
- if(!properties.length){box.innerHTML='<div class="card notice">No properties yet. Tap “Add starter properties” or go to Properties.</div>'; return;}
- properties.forEach(p=>{
-   const m=latestFor(p.id);
-   const html=m?`
-    <div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">${monthName(m.bill_month)} • ${p.utility_company||''} • ${p.solar_company||''}</div></div><span class="pill">True-Up ${p.trueup_month?new Date(2024,p.trueup_month-1,1).toLocaleDateString(undefined,{month:'short'}):'?'}</span></div>
+ if(!properties.length){box.innerHTML='<div class="card notice">No properties yet. Go to Upload and load June 2026 known data, or add properties manually.</div>'; return;}
+ let list=selectedProperty==='combined'?properties:properties.filter(p=>p.id===selectedProperty);
+ list.forEach(p=>{
+   const m=latestFor(p.id); const tu=trueupInfo(p,m);
+   const html=m?(()=>{const bs=billStatus(m.amount_due_now); const ts=trueupStatus(m.trueup_balance,tu.cycles); const os=offsetStatus(m.solar_offset_percent); return `
+    <div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">${monthName(m.bill_month)} • ${p.utility_company||''} • ${p.solar_company||''}</div></div><span class="due-pill">True-Up: ${tu.due}</span></div>
     <div class="metrics">
-      <div class="metric"><div class="label">Solar Produced</div><div class="value">${kwh(m.solar_produced_kwh)} kWh</div></div>
+      <div class="metric ${bs[0]}"><div class="label">Bill This Month</div><div class="value moneybig">${money(m.amount_due_now)}</div><div class="status">${bs[1]}</div></div>
+      <div class="metric ${ts[0]}"><div class="label">Current True-Up</div><div class="value moneybig">${money(m.trueup_balance)}</div><div class="status">${ts[1]}</div></div>
+      <div class="metric ${tu.status}"><div class="label">True-Up Due</div><div class="value">${tu.due}</div><div class="status">${tu.text}</div></div>
+      <div class="metric warnbg"><div class="label">Energy Cost This Month</div><div class="value">${money(m.monthly_nem_charge)}</div><div class="status">Added to true-up</div></div>
+      <div class="metric ${os[0]}"><div class="label">Solar Offset</div><div class="value">${pct(m.solar_offset_percent)}</div><div class="status">${os[1]}</div></div>
       <div class="metric"><div class="label">Home Used</div><div class="value">${kwh(m.home_usage_kwh)} kWh</div></div>
-      <div class="metric"><div class="label">Solar Offset</div><div class="value ${m.solar_offset_percent>=70?'good':''}">${pct(m.solar_offset_percent)}</div></div>
+      <div class="metric"><div class="label">Solar Produced</div><div class="value">${kwh(m.solar_produced_kwh)} kWh</div></div>
       <div class="metric"><div class="label">Grid Imported</div><div class="value">${kwh(m.grid_import_kwh)} kWh</div></div>
       <div class="metric"><div class="label">Grid Exported</div><div class="value">${kwh(m.grid_export_kwh)} kWh</div></div>
-      <div class="metric"><div class="label">True-Up Balance</div><div class="value">${money(m.trueup_balance)}</div></div>
-    </div>`:`<div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">No monthly data yet</div></div></div><p class="small">Go to Monthly and enter your first bill.</p>`;
+    </div>
+    <div class="summary small"><b>${p.name} summary:</b> ${monthName(m.bill_month)} bill was <b>${money(m.amount_due_now)}</b>. Solar covered <b>${pct(m.solar_offset_percent)}</b> of estimated home usage. Current true-up is <b>${money(m.trueup_balance)}</b>, due <b>${tu.due}</b>.</div>`})():`<div class="row"><div><div class="title">🏠 ${p.name}</div><div class="small">No monthly data yet</div></div><span class="due-pill">True-Up: ${monthLabel(p.trueup_month)}</span></div><p class="small">Go to Upload and load known data, or enter/edit manually.</p>`;
    const div=document.createElement('div');div.className='card property-card';div.innerHTML=html;box.appendChild(div);
  });
 }

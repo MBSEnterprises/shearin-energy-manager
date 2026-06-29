@@ -1,23 +1,32 @@
-# Shearin Energy Manager v0.8 — Timeline Redesign
-
-Complete release ZIP.
+# Shearin Energy Manager v0.9 — Source Configuration
 
 ## What changed
-- Timeline now behaves more like the Dashboard for previous months.
-- Timeline has clear scope: Combined / PG&E Account, Redding, or Manteca.
-- Combined Timeline shows the PG&E bill tie-out first.
-- Property Timeline shows dashboard-style cards when property-level data is available.
-- Historical import now repairs account-level history and adds property-level PG&E rows for months where the uploaded PDFs provided the service summary.
-- December 2025 now loads property rows for both Manteca and Redding.
-- No SQL changes if 002 and 003 were already run.
 
-## Deploy
-1. Upload the full contents of this folder to GitHub.
-2. Commit.
-3. Wait for GitHub Pages deployment.
-4. Hard refresh the app.
-5. Go to Upload and run **Load Historical PG&E Bills** again.
-6. Go to Timeline and check December 2025 under Combined, Redding, and Manteca.
+- Adds property-specific energy sources.
+- Redding sources: PG&E electricity, Tesla solar, propane, kerosene.
+- Manteca sources: PG&E electricity, Tesla solar, PG&E natural gas.
+- Delivered fuels are event-based, not monthly requirements.
+- Manteca will not show propane or kerosene.
+- Redding will only show delivered fuel cards in a month where propane/kerosene/other delivered fuel cost exists.
+- Adds data-completeness cards based only on expected monthly sources.
 
-## Important note
-For older months, Tesla solar production is not yet imported unless we have Tesla screenshots for that month. Those months will show PG&E property data but solar offset may show as unavailable.
+## SQL required
+
+Run this new migration once:
+
+`supabase/004_property_sources.sql`
+
+Do not rerun 001, 002, or 003 if you already ran them.
+
+## After deploying
+
+1. Upload the full contents of this ZIP to GitHub and commit.
+2. Wait for GitHub Pages deployment.
+3. Refresh the app.
+4. Go to Upload.
+5. Click **Load / Repair Property Source Setup**.
+6. Then click **Load / Repair June 2026 Known Data** and/or **Load Historical PG&E Bills** as needed.
+
+## Notes
+
+This release is about data architecture. It makes the app understand that some energy sources are monthly utilities while others are ad-hoc delivery events.

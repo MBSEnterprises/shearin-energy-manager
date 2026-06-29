@@ -28,7 +28,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.7.2 • Bill Tie-Out</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.8 • Timeline Redesign</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -122,7 +122,7 @@
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 0.7.2 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 0.8 keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
@@ -153,7 +153,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.7.2 adds a bill-first combined dashboard and Timeline so you can move through previous months, see PG&E account history, and spot true-up events. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 0.8 redesigns Timeline so previous months look like dashboard cards and adds historical property-level PG&E rows where the bill data is available. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -193,7 +193,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.7.2':'Build 0.7.2 • Bill Tie-Out'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.7.2':'Build 0.8 • Timeline Redesign'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -355,55 +355,88 @@ function renderTimelineScopeFilter(){
  const buttons=[{id:'combined',name:'Combined / PG&E Account'},...properties.map(p=>({id:p.id,name:p.name}))];
  buttons.forEach(b=>{const el=document.createElement('button');el.className='prop-tab '+(selectedTimelineScope===b.id?'active':'');el.textContent=b.name;el.onclick=()=>{selectedTimelineScope=b.id;renderTimeline();};t.appendChild(el);});
 }
+function historicalMonthStatus(amount){
+ amount=Number(amount||0);
+ if(amount<=0) return 'goodbg';
+ if(amount<=100) return 'warnbg';
+ return 'badbg';
+}
+function renderPropertyMiniDashboard(m, selectedKey){
+ const p=properties.find(x=>x.id===m.property_id);
+ const pName=m.properties?.name||p?.name||'Property';
+ const tu=p?trueupInfo(p,m):{due:'Unknown',text:'',status:''};
+ const os=offsetStatus(m.solar_offset_percent);
+ const bs=billStatus(m.amount_due_now);
+ const ts=trueupStatus(m.trueup_balance,tu.cycles);
+ const hasSolar=Number(m.solar_produced_kwh||0)>0;
+ const hasHome=Number(m.home_usage_kwh||0)>0;
+ const sourceNote=m.notes||'';
+ const div=document.createElement('div'); div.className='card property-card';
+ div.innerHTML=`
+  <div class="row"><div><div class="title">🏠 ${pName}</div><div class="small">${fullMonthName(selectedKey+'-01')} • property detail</div></div><span class="due-pill">True-Up: ${tu.due}</span></div>
+  <div class="metrics">
+    <div class="metric ${bs[0]}"><div class="label">PG&E / Energy Due</div><div class="value moneybig">${money(m.amount_due_now)}</div><div class="status">Property-level amount captured</div></div>
+    <div class="metric ${ts[0]}"><div class="label">Current True-Up</div><div class="value">${money(m.trueup_balance)}</div><div class="status">${ts[1]}</div></div>
+    <div class="metric ${tu.status}"><div class="label">True-Up Due</div><div class="value">${tu.due}</div><div class="status">${tu.text}</div></div>
+    <div class="metric warnbg"><div class="label">Electric / NEM Cost</div><div class="value">${money(m.monthly_nem_charge)}</div><div class="status">PG&E electric line</div></div>
+    <div class="metric"><div class="label">PG&E Gas</div><div class="value">${money(m.gas_cost)}</div><div class="status">${kwh(m.gas_therms)} therms</div></div>
+    <div class="metric"><div class="label">Delivered Fuels</div><div class="value">${money(deliveredFuelCost(m))}</div><div class="status">Propane / kerosene / other</div></div>
+    <div class="metric ${hasSolar?os[0]:''}"><div class="label">Solar Offset</div><div class="value">${hasSolar?pct(m.solar_offset_percent):'—'}</div><div class="status">${hasSolar?os[1]:'Tesla data not imported for this month'}</div></div>
+    <div class="metric"><div class="label">Home Used</div><div class="value">${hasHome?kwh(m.home_usage_kwh)+' kWh':'—'}</div><div class="status">${hasHome?'Estimated':'Needs solar/import/export detail'}</div></div>
+    <div class="metric"><div class="label">Solar Produced</div><div class="value">${hasSolar?kwh(m.solar_produced_kwh)+' kWh':'—'}</div></div>
+    <div class="metric"><div class="label">Net/Grid Usage</div><div class="value">${kwh(m.grid_import_kwh)} kWh</div><div class="status">From PG&E service summary when detailed imports/exports unavailable</div></div>
+  </div>
+  <div class="summary small"><b>${pName} note:</b> ${sourceNote || 'Property-level row loaded from PG&E bill.'}</div>`;
+ return div;
+}
 function renderTimeline(){
  renderTimelineScopeFilter();
  const months=getAllMonths();
  if(!selectedMonth) selectedMonth=months[0]||isoMonth();
  const title=$('selectedMonthTitle'); if(title) title.textContent=fullMonthName(selectedMonth+'-01');
  const count=$('historyCount'); if(count) count.textContent=months.length+' months';
- const cards=$('timelineMonthCards'); if(cards){
+ const scopeLabel=selectedTimelineScope==='combined'?'Combined / PG&E Account':(properties.find(p=>p.id===selectedTimelineScope)?.name||'Property');
+ const cards=$('timelineMonthCards');
+ if(cards){
    cards.innerHTML='';
-   const bill= selectedTimelineScope==='combined' ? accountBillForMonth(selectedMonth) : null;
+   const bill=accountBillForMonth(selectedMonth);
    const allRows=propertyRowsForMonth(selectedMonth);
    const rows= selectedTimelineScope==='combined' ? allRows : allRows.filter(r=>r.property_id===selectedTimelineScope);
-   if(!bill && !rows.length){cards.innerHTML='<div class="notice">No data saved for this month/scope yet. Use the scope buttons above to switch between Combined, Redding, and Manteca.</div>';}
-   if(bill){
+   const scopeBanner=document.createElement('div'); scopeBanner.className='notice small';
+   scopeBanner.innerHTML=`<b>Timeline scope:</b> ${scopeLabel}. This screen should read like the dashboard for the selected month. If a month only has account-level data, the app will say so instead of pretending we have property detail.`;
+   cards.appendChild(scopeBanner);
+   if(selectedTimelineScope==='combined' && bill){
      const isTrueup=Number(bill.total_nem_charges||0)>500 || String(bill.notes||'').toLowerCase().includes('true-up');
-     const div=document.createElement('div'); div.className='card '+(isTrueup?'property-card':'');
-     div.innerHTML=`<div class="row"><div><div class="title">PG&E Account Bill</div><div class="small">Statement ${bill.statement_date||''} • Due ${bill.due_date||'unknown'}</div></div>${isTrueup?'<span class="badge warn">TRUE-UP</span>':''}</div>
+     const rowSum=allRows.reduce((s,r)=>s+Number(r.amount_due_now||0),0);
+     const div=document.createElement('div'); div.className='card property-card combined-summary';
+     div.innerHTML=`<div class="row"><div><div class="title">🏡 Combined Portfolio</div><div class="small">${fullMonthName(selectedMonth+'-01')} • PG&E account tie-out</div></div>${isTrueup?'<span class="badge warn">TRUE-UP</span>':'<span class="due-pill">PG&E bill</span>'}</div>
        <div class="metrics">
-         <div class="metric ${bill.total_amount_due>500?'badbg':bill.total_amount_due>75?'warnbg':'goodbg'}"><div class="label">Amount Due</div><div class="value moneybig">${money(bill.total_amount_due)}</div></div>
+         <div class="metric ${historicalMonthStatus(bill.total_amount_due)}"><div class="label">PG&E Total Due</div><div class="value moneybig">${money(bill.total_amount_due)}</div><div class="status">Should tie to page 1 of bill</div></div>
          <div class="metric"><div class="label">Electric Charges</div><div class="value">${money(bill.current_electric_charges)}</div></div>
          <div class="metric"><div class="label">Gas Charges</div><div class="value">${money(bill.current_gas_charges)}</div></div>
-         <div class="metric ${isTrueup?'badbg':''}"><div class="label">NEM True-Up / Charges</div><div class="value">${money(bill.total_nem_charges)}</div></div>
-       </div><div class="summary small">${bill.notes||'Account-level bill summary.'}</div>`;
+         <div class="metric ${isTrueup?'badbg':''}"><div class="label">NEM / True-Up Charges</div><div class="value">${money(bill.total_nem_charges)}</div></div>
+         <div class="metric"><div class="label">Property Rows Loaded</div><div class="value">${allRows.length}</div><div class="status">Rows total: ${money(rowSum)}</div></div>
+       </div><div class="summary small">${bill.notes||'Account-level bill summary.'}${allRows.length?` Property rows are shown below.`:' Property-level split has not been imported for this month yet.'}</div>`;
      cards.appendChild(div);
    }
-   rows.forEach(m=>{
-     const pName=m.properties?.name||properties.find(p=>p.id===m.property_id)?.name||'Property';
-     const div=document.createElement('div'); div.className='card property-card';
-     div.innerHTML=`<div class="row"><div><div class="title">🏠 ${pName}</div><div class="small">Property energy data for ${fullMonthName(selectedMonth+'-01')}</div></div></div>
-       <div class="metrics">
-        <div class="metric"><div class="label">Total Energy Spend</div><div class="value moneybig">${money(totalEnergySpend(m))}</div></div>
-        <div class="metric"><div class="label">Solar Produced</div><div class="value">${kwh(m.solar_produced_kwh)} kWh</div></div>
-        <div class="metric"><div class="label">Home Used</div><div class="value">${kwh(m.home_usage_kwh)} kWh</div></div>
-        <div class="metric ${offsetStatus(m.solar_offset_percent)[0]}"><div class="label">Solar Offset</div><div class="value">${pct(m.solar_offset_percent)}</div></div>
-        <div class="metric"><div class="label">True-Up Balance</div><div class="value">${money(m.trueup_balance)}</div></div>
-        <div class="metric"><div class="label">PG&E Gas</div><div class="value">${money(m.gas_cost)}</div></div>
-       </div>`;
-     cards.appendChild(div);
-   });
+   if(rows.length){
+     rows.forEach(m=>cards.appendChild(renderPropertyMiniDashboard(m, selectedMonth)));
+   } else if(selectedTimelineScope!=='combined'){
+     cards.innerHTML += '<div class="notice">No property-level monthly data is saved for this property/month yet. The PG&E account bill may still exist under Combined.</div>';
+   }
+   if(selectedTimelineScope==='combined' && !bill && !rows.length){
+     cards.innerHTML += '<div class="notice">No data saved for this month yet.</div>';
+   }
  }
  const list=$('timelineList'); if(list){
    list.innerHTML='';
    months.forEach(key=>{
-    const b= selectedTimelineScope==='combined' ? accountBillForMonth(key) : null; const allRows=propertyRowsForMonth(key); const rows= selectedTimelineScope==='combined' ? allRows : allRows.filter(r=>r.property_id===selectedTimelineScope);
+    const b=accountBillForMonth(key); const allRows=propertyRowsForMonth(key); const rows= selectedTimelineScope==='combined' ? allRows : allRows.filter(r=>r.property_id===selectedTimelineScope);
     if(selectedTimelineScope!=='combined' && !rows.length) return;
-    const amt=b?Number(b.total_amount_due||0):rows.reduce((s,r)=>s+totalEnergySpend(r),0);
+    const amt= selectedTimelineScope==='combined' ? (b?Number(b.total_amount_due||0):rows.reduce((s,r)=>s+Number(r.amount_due_now||0),0)) : rows.reduce((s,r)=>s+Number(r.amount_due_now||0),0);
     const isTrueup=b&&(Number(b.total_nem_charges||0)>500 || String(b.notes||'').toLowerCase().includes('true-up'));
-    const scopeName=selectedTimelineScope==='combined'?'Combined / PG&E Account':(properties.find(p=>p.id===selectedTimelineScope)?.name||'Property');
     const item=document.createElement('button'); item.className='timeline-item '+(key===selectedMonth?'active ':'')+(isTrueup?'trueup':'');
-    item.innerHTML=`<div><b>${fullMonthName(key+'-01')}</b><div class="mini">${scopeName}${b?' • PG&E bill':''}${rows.length?' • '+rows.length+' property row(s)':''}</div></div><div style="text-align:right"><b>${money(amt)}</b><div class="mini">${isTrueup?'TRUE-UP':''}</div></div>`;
+    item.innerHTML=`<div><b>${fullMonthName(key+'-01')}</b><div class="mini">${scopeLabel}${b&&selectedTimelineScope==='combined'?' • PG&E account bill':''}${rows.length?' • '+rows.length+' property row(s)':' • account only'}</div></div><div style="text-align:right"><b>${money(amt)}</b><div class="mini">${isTrueup?'TRUE-UP':''}</div></div>`;
     item.onclick=()=>{selectedMonth=key;renderTimeline();};
     list.appendChild(item);
    });
@@ -466,30 +499,49 @@ async function loadKnownJuneData(){
 
 async function loadHistoricalPgeBills(){
   if(!user) return alert('Please log in first.');
-  if(!confirm('Load the historical PG&E account-level bill summaries from the uploaded PDFs?')) return;
-  const rows=[
-    {owner_id:user.id,statement_date:'2025-04-23',due_date:null,billing_month:'2025-04-01',current_electric_charges:30.99,current_gas_charges:103.76,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
-    {owner_id:user.id,statement_date:'2025-05-22',due_date:null,billing_month:'2025-05-01',current_electric_charges:16.44,current_gas_charges:79.73,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
-    {owner_id:user.id,statement_date:'2025-06-24',due_date:null,billing_month:'2025-06-01',current_electric_charges:30.12,current_gas_charges:86.57,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
-    {owner_id:user.id,statement_date:'2025-07-24',due_date:null,billing_month:'2025-07-01',current_electric_charges:50.53,current_gas_charges:78.23,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
-    {owner_id:user.id,statement_date:'2025-08-22',due_date:null,billing_month:'2025-08-01',current_electric_charges:220.97,current_gas_charges:75.12,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history. Property-level split pending parser.'},
-    {owner_id:user.id,statement_date:'2025-09-23',due_date:'2025-10-14',billing_month:'2025-09-01',current_electric_charges:117.86,current_gas_charges:26.23,total_nem_charges:0,total_amount_due:167.48,source_file:'PG&E Sept 2025.pdf',notes:'Account-level statement summary.'},
-    {owner_id:user.id,statement_date:'2025-10-23',due_date:'2025-11-13',billing_month:'2025-10-01',current_electric_charges:24.20,current_gas_charges:23.92,total_nem_charges:0,total_amount_due:-68.34,source_file:'PG&E Oct 2025.pdf',notes:'Credit balance / no payment due.'},
-    {owner_id:user.id,statement_date:'2025-11-22',due_date:'2025-12-15',billing_month:'2025-11-01',current_electric_charges:24.20,current_gas_charges:50.44,total_nem_charges:0,total_amount_due:6.30,source_file:'PG&E Nov 2025.pdf',notes:'Account-level statement summary after prior credit.'},
-    {owner_id:user.id,statement_date:'2025-12-24',due_date:'2026-01-15',billing_month:'2025-12-01',current_electric_charges:25.00,current_gas_charges:208.22,total_nem_charges:0,total_amount_due:233.22,source_file:'PG&E Dec 2025.pdf',notes:'Account-level statement summary.'},
-    {owner_id:user.id,statement_date:'2026-01-25',due_date:'2026-02-17',billing_month:'2026-01-01',current_electric_charges:25.00,current_gas_charges:98.59,total_nem_charges:0,total_amount_due:123.59,source_file:'PG&E Jan/Feb 2026 upload',notes:'Account-level statement summary.'},
-    {owner_id:user.id,statement_date:'2026-02-25',due_date:'2026-03-18',billing_month:'2026-02-01',current_electric_charges:25.80,current_gas_charges:192.31,total_nem_charges:0,total_amount_due:218.11,source_file:'PG&E Feb 2026.pdf',notes:'Account-level statement summary.'},
-    {owner_id:user.id,statement_date:'2026-03-26',due_date:'2026-04-16',billing_month:'2026-03-01',current_electric_charges:42.12,current_gas_charges:36.87,total_nem_charges:0,total_amount_due:78.99,source_file:'PG&E March 2026.pdf',notes:'Account-level statement summary.'},
-    {owner_id:user.id,statement_date:'2026-04-24',due_date:'2026-05-15',billing_month:'2026-04-01',current_electric_charges:46.02,current_gas_charges:14.21,total_nem_charges:0,total_amount_due:13.97,source_file:'PG&E April 2026.pdf',notes:'Includes gas CA Climate Credit adjustment.'},
-    {owner_id:user.id,statement_date:'2026-05-24',due_date:'2026-06-15',billing_month:'2026-05-01',current_electric_charges:46.02,current_gas_charges:16.74,total_nem_charges:3662.80,total_amount_due:3725.56,source_file:'PG&E May 2026.pdf',notes:'Major NEM true-up bill.'},
-    {owner_id:user.id,statement_date:'2026-06-24',due_date:'2026-07-15',billing_month:'2026-06-01',current_electric_charges:50.78,current_gas_charges:17.35,total_nem_charges:0,total_amount_due:68.13,source_file:'PG&E June 2026.pdf',notes:'Current bill imported separately into property monthly data too.'}
-  ];
+  if(!confirm('Load/repair historical PG&E account summaries and property-level rows where the PDFs provide them?')) return;
   try{
-    const {error}=await sb.from('historical_bills').upsert(rows,{onConflict:'owner_id,statement_date'});
-    if(error) throw error;
     await loadAll();
-    if($('importStatus')) $('importStatus').textContent='Historical PG&E account-level bills loaded.';
-    alert('Historical PG&E bill summaries loaded.');
+    const redding = await findOrCreateProperty({name:'Redding',address:'12465 Maria Dr',utility_company:'PG&E',solar_company:'Tesla',trueup_month:8,notes:'Redding property'});
+    const manteca = await findOrCreateProperty({name:'Manteca',address:'1631 Paola Pl',utility_company:'PG&E',solar_company:'Tesla',trueup_month:5,notes:'Manteca property'});
+    // Clear and reload historical account summaries so corrected month labels replace earlier prototype rows.
+    await sb.from('historical_bills').delete().eq('owner_id',user.id);
+    const accountRows=[
+      {owner_id:user.id,statement_date:'2025-04-23',due_date:null,billing_month:'2025-04-01',current_electric_charges:30.99,current_gas_charges:103.76,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history only. Property-level split pending parser.'},
+      {owner_id:user.id,statement_date:'2025-05-22',due_date:null,billing_month:'2025-05-01',current_electric_charges:16.44,current_gas_charges:79.73,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history only. Property-level split pending parser.'},
+      {owner_id:user.id,statement_date:'2025-06-24',due_date:null,billing_month:'2025-06-01',current_electric_charges:30.12,current_gas_charges:86.57,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history only. Property-level split pending parser.'},
+      {owner_id:user.id,statement_date:'2025-07-24',due_date:null,billing_month:'2025-07-01',current_electric_charges:50.53,current_gas_charges:78.23,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history only. Property-level split pending parser.'},
+      {owner_id:user.id,statement_date:'2025-08-22',due_date:null,billing_month:'2025-08-01',current_electric_charges:220.97,current_gas_charges:75.12,total_nem_charges:0,total_amount_due:null,source_file:'Monthly billing history / uploaded PG&E files',notes:'Historical account-level bill history only. Property-level split pending parser.'},
+      {owner_id:user.id,statement_date:'2025-09-23',due_date:'2025-10-14',billing_month:'2025-09-01',current_electric_charges:117.86,current_gas_charges:26.23,total_nem_charges:0,total_amount_due:167.48,source_file:'PG&E Sept 2025.pdf',notes:'Account-level statement summary.'},
+      {owner_id:user.id,statement_date:'2025-10-23',due_date:'2025-11-13',billing_month:'2025-10-01',current_electric_charges:24.20,current_gas_charges:23.92,total_nem_charges:0,total_amount_due:-68.34,source_file:'PG&E Oct 2025.pdf',notes:'Credit balance / no payment due.'},
+      {owner_id:user.id,statement_date:'2025-11-22',due_date:'2025-12-15',billing_month:'2025-12-01',current_electric_charges:24.20,current_gas_charges:50.44,total_nem_charges:0,total_amount_due:6.30,source_file:'PG&E Dec 2025.pdf',notes:'December bill / due December 2025. Account total reflects prior credit balance.'},
+      {owner_id:user.id,statement_date:'2026-01-25',due_date:'2026-02-17',billing_month:'2026-02-01',current_electric_charges:25.00,current_gas_charges:98.59,total_nem_charges:0,total_amount_due:123.59,source_file:'PG&E Feb 2026.pdf',notes:'February bill / due February 2026.'},
+      {owner_id:user.id,statement_date:'2026-02-25',due_date:'2026-03-18',billing_month:'2026-03-01',current_electric_charges:25.80,current_gas_charges:192.31,total_nem_charges:0,total_amount_due:218.11,source_file:'PG&E March 2026.pdf',notes:'March bill / due March 2026.'},
+      {owner_id:user.id,statement_date:'2026-03-26',due_date:'2026-04-16',billing_month:'2026-04-01',current_electric_charges:42.12,current_gas_charges:36.87,total_nem_charges:0,total_amount_due:78.99,source_file:'PG&E April 2026.pdf',notes:'April bill / due April 2026.'},
+      {owner_id:user.id,statement_date:'2026-04-24',due_date:'2026-05-15',billing_month:'2026-05-01',current_electric_charges:46.02,current_gas_charges:14.21,total_nem_charges:0,total_amount_due:13.97,source_file:'PG&E May 2026.pdf',notes:'May bill / due May 2026. Includes gas CA Climate Credit adjustment.'},
+      {owner_id:user.id,statement_date:'2026-05-24',due_date:'2026-06-15',billing_month:'2026-05-01',current_electric_charges:46.02,current_gas_charges:16.74,total_nem_charges:3662.80,total_amount_due:3725.56,source_file:'PG&E Trueup.pdf',notes:'Major Manteca NEM true-up bill.'},
+      {owner_id:user.id,statement_date:'2026-06-24',due_date:'2026-07-15',billing_month:'2026-06-01',current_electric_charges:50.78,current_gas_charges:17.35,total_nem_charges:0,total_amount_due:68.13,source_file:'PG&E June 2026.pdf',notes:'Current bill; also loaded into property monthly data.'}
+    ];
+    let result=await sb.from('historical_bills').insert(accountRows);
+    if(result.error) throw result.error;
+    const historicalMonthlyRows=[
+      // Dec 2025 bill summary page: Manteca $12.10 electric + $50.44 gas; Redding $12.10 electric.
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2025-12-01',solar_produced_kwh:0,grid_import_kwh:425.2148,grid_export_kwh:0,monthly_nem_charge:12.10,trueup_balance:0,electric_base_charge:12.10,gas_cost:50.44,gas_therms:18,amount_due_now:62.54,propane_cost:0,propane_gallons:0,kerosene_cost:0,kerosene_gallons:0,other_energy_cost:0,notes:'Historical PG&E Dec 2025 property row. Account bill had prior credit, so property total does not tie to amount due.'},
+      {owner_id:user.id,property_id:redding.id,bill_month:'2025-12-01',solar_produced_kwh:0,grid_import_kwh:1092.112,grid_export_kwh:0,monthly_nem_charge:12.10,trueup_balance:0,electric_base_charge:12.10,gas_cost:0,gas_therms:0,amount_due_now:12.10,propane_cost:0,propane_gallons:0,kerosene_cost:0,kerosene_gallons:0,other_energy_cost:0,notes:'Historical PG&E Dec 2025 property row. Tesla solar production not imported for this month.'},
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-02-01',solar_produced_kwh:0,grid_import_kwh:-5.8879,grid_export_kwh:0,monthly_nem_charge:12.50,trueup_balance:0,electric_base_charge:12.50,gas_cost:98.59,gas_therms:35,amount_due_now:111.09,notes:'Historical PG&E Feb 2026 property row. Tesla solar production not imported.'},
+      {owner_id:user.id,property_id:redding.id,bill_month:'2026-02-01',solar_produced_kwh:0,grid_import_kwh:2116.276,grid_export_kwh:0,monthly_nem_charge:12.50,trueup_balance:0,electric_base_charge:12.50,gas_cost:0,gas_therms:0,amount_due_now:12.50,notes:'Historical PG&E Feb 2026 property row. Tesla solar production not imported.'},
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-03-01',solar_produced_kwh:0,grid_import_kwh:190.80165,grid_export_kwh:0,monthly_nem_charge:12.90,trueup_balance:0,electric_base_charge:12.90,gas_cost:192.31,gas_therms:70,amount_due_now:205.21,notes:'Historical PG&E March 2026 property row. Tesla solar production not imported.'},
+      {owner_id:user.id,property_id:redding.id,bill_month:'2026-03-01',solar_produced_kwh:0,grid_import_kwh:2038.184,grid_export_kwh:0,monthly_nem_charge:12.90,trueup_balance:0,electric_base_charge:12.90,gas_cost:0,gas_therms:0,amount_due_now:12.90,notes:'Historical PG&E March 2026 property row. Tesla solar production not imported.'},
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-04-01',solar_produced_kwh:0,grid_import_kwh:-235.8519,grid_export_kwh:0,monthly_nem_charge:21.06,trueup_balance:0,electric_base_charge:21.06,gas_cost:36.87,gas_therms:15,amount_due_now:57.93,notes:'Historical PG&E April 2026 property row. Tesla solar production not imported.'},
+      {owner_id:user.id,property_id:redding.id,bill_month:'2026-04-01',solar_produced_kwh:0,grid_import_kwh:851.924,grid_export_kwh:0,monthly_nem_charge:21.06,trueup_balance:0,electric_base_charge:21.06,gas_cost:0,gas_therms:0,amount_due_now:21.06,notes:'Historical PG&E April 2026 property row. Tesla solar production not imported.'},
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-05-01',solar_produced_kwh:0,grid_import_kwh:-401.1571,grid_export_kwh:0,monthly_nem_charge:3685.81,trueup_balance:0,electric_base_charge:23.01,gas_cost:16.74,gas_therms:7,amount_due_now:3702.55,notes:'Historical PG&E May/June 2026 Manteca true-up property row.'},
+      {owner_id:user.id,property_id:redding.id,bill_month:'2026-05-01',solar_produced_kwh:0,grid_import_kwh:528.678,grid_export_kwh:0,monthly_nem_charge:23.01,trueup_balance:0,electric_base_charge:23.01,gas_cost:0,gas_therms:0,amount_due_now:23.01,notes:'Historical PG&E May/June 2026 Redding property row. Tesla solar production not imported.'}
+    ].map(r=>({propane_cost:0,propane_gallons:0,kerosene_cost:0,kerosene_gallons:0,other_energy_cost:0,...r}));
+    result=await sb.from('monthly_energy').upsert(historicalMonthlyRows,{onConflict:'owner_id,property_id,bill_month'});
+    if(result.error) throw result.error;
+    await loadAll();
+    if($('importStatus')) $('importStatus').textContent='Historical PG&E account and property-level rows loaded.';
+    alert('Historical PG&E bill summaries and property rows loaded. Timeline should now show dashboard-style cards for available months, including December 2025.');
   }catch(e){alert('Historical import failed: '+(e.message||e));}
 }
 

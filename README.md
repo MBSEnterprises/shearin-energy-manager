@@ -1,30 +1,23 @@
-# Shearin Energy Manager v0.7.2 — Version Label Fix
+# Shearin Energy Manager v0.8 — Timeline Redesign
 
 Complete release ZIP.
 
-## Changes from v0.6.1
-- Fixes signed-in header showing Build 0.6 instead of the current build.
-- Keeps v0.6.1 dashboard/timeline fixes.
-- No SQL changes.
+## What changed
+- Timeline now behaves more like the Dashboard for previous months.
+- Timeline has clear scope: Combined / PG&E Account, Redding, or Manteca.
+- Combined Timeline shows the PG&E bill tie-out first.
+- Property Timeline shows dashboard-style cards when property-level data is available.
+- Historical import now repairs account-level history and adds property-level PG&E rows for months where the uploaded PDFs provided the service summary.
+- December 2025 now loads property rows for both Manteca and Redding.
+- No SQL changes if 002 and 003 were already run.
 
 ## Deploy
-Upload all files in this folder to GitHub, commit, wait for GitHub Pages deployment, then hard refresh.
+1. Upload the full contents of this folder to GitHub.
+2. Commit.
+3. Wait for GitHub Pages deployment.
+4. Hard refresh the app.
+5. Go to Upload and run **Load Historical PG&E Bills** again.
+6. Go to Timeline and check December 2025 under Combined, Redding, and Manteca.
 
-
-## v0.7.2 Bill Tie-Out
-- Adds Combined Portfolio top card.
-- Shows PG&E Total Due that ties to the bill.
-- Shows property breakdown under the total due.
-- Hides starter-property button after properties exist.
-- No SQL changes required if 002 and 003 were already run.
-
-
-## v0.7.2
-- Fixed signed-in header version label so it matches the deployed release.
-- No SQL changes.
-
-
-## v0.7.2
-- Fixes Combined tab so the Combined Portfolio card actually renders.
-- Shows PG&E Total Due tie-out at the top of the Combined dashboard.
-- No SQL changes.
+## Important note
+For older months, Tesla solar production is not yet imported unless we have Tesla screenshots for that month. Those months will show PG&E property data but solar offset may show as unavailable.

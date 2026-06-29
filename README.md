@@ -1,4 +1,4 @@
-# Shearin Energy Manager v1.1 — UI Polish
+# Shearin Energy Manager v1.2 — UI Polish
 
 ## What changed
 
@@ -39,3 +39,9 @@ Do not rerun 001, 002, or 003 if those were already completed.
 ## Notes
 
 This release closes the currency-formatting issue visible on timeline cards and keeps the source-configuration behavior from v1.0. The app should no longer force irrelevant sources, such as kerosene in Manteca, into the manual workflow.
+
+
+## v1.2 UI polish
+- Prevented currency amounts from wrapping onto multiple lines in metric cards.
+- Added responsive financial typography using container-based sizing.
+- Kept dollar amounts in tabular numeric formatting for cleaner comparison.

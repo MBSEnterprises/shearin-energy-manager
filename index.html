@@ -23,20 +23,31 @@
     @media(min-width:760px){.grid.cards{grid-template-columns:1fr 1fr}.form-grid.desktop{grid-template-columns:1fr 1fr}.tabs{left:50%;transform:translateX(-50%);max-width:980px;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0}.metrics{grid-template-columns:repeat(3,1fr)}.wide{grid-column:auto}}
   .combined-summary{border-color:#0f766e}.breakdown{font-size:16px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.checkitem{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.checkitem input{width:auto}.source-field.hidden{display:none!important}.source-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.break-row{display:flex;justify-content:space-between;gap:12px;margin:4px 0}.hidden{display:none!important}
 
-  /* v1.1 UI polish */
-  .metric .value{letter-spacing:-.02em;line-height:1.1;overflow-wrap:anywhere}
-  .moneybig{font-size:26px!important;line-height:1.05}
-  .breakdown b,.right,.metric .value{font-variant-numeric:tabular-nums}
+  /* v1.2 UI polish: responsive financial typography */
+  .metric{container-type:inline-size;min-width:0}
+  .metric .value{
+    letter-spacing:-.035em;
+    line-height:1.05;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:clip;
+    max-width:100%;
+    font-variant-numeric:tabular-nums;
+    font-size:clamp(16px, 14cqw, 20px);
+  }
+  .moneybig{font-size:clamp(20px, 18cqw, 26px)!important;line-height:1.02}
+  .breakdown b,.right{font-variant-numeric:tabular-nums}
   .metric .label{line-height:1.25}
   .metric .status{line-height:1.25}
-  @media(max-width:420px){.moneybig{font-size:24px!important}.metric .value{font-size:19px}}
+  .break-row b{white-space:nowrap}
+  @media(max-width:420px){.moneybig{font-size:clamp(18px, 17cqw, 23px)!important}.metric .value{font-size:clamp(15px, 13cqw, 19px)}}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 1.1 • UI Polish</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 1.2 • UI Polish</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -142,7 +153,7 @@
     <section id="uploadView" class="view hidden">
       <div class="card">
         <div class="title">Upload / Import</div>
-        <p class="small">Build 1.1 keeps the property setup controls and adds consistent currency formatting for property-specific energy sources and distinguishes monthly utilities from event-based delivered fuels. It keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <p class="small">Build 1.2 keeps the property setup controls and adds consistent currency formatting for property-specific energy sources and distinguishes monthly utilities from event-based delivered fuels. It keeps the upload-first workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
         <div class="notice small" style="margin-top:10px">
           Use this button to load/repair the June 2026 data we already extracted. Future builds will add true PDF/screenshot upload + review/accept.
         </div>
@@ -174,7 +185,7 @@
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 1.1 fixes source configuration and currency polish: Manteca only shows electric, solar, and PG&E gas; Redding shows electric and solar monthly, with propane/kerosene as event-based delivered fuels only when there is a delivery. Manual editing remains the fallback when an import needs correction.</p>
+        <p class="small">Build 1.2 fixes source configuration and currency polish: Manteca only shows electric, solar, and PG&E gas; Redding shows electric and solar monthly, with propane/kerosene as event-based delivered fuels only when there is a delivery. Manual editing remains the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -224,7 +235,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 1.1':'Build 1.1 • UI Polish'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 1.1':'Build 1.2 • UI Polish'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}

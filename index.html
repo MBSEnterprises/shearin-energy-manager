@@ -27,7 +27,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.5 Redo • Full energy + history</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.5.1 • Auth refresh fix</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -168,7 +168,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.4':'Build 0.5 Redo • Full energy + history'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.4':'Build 0.5.1 • Auth refresh fix'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -180,15 +180,36 @@ $('loginBtn').onclick=async()=>{ if(!sb)return; showMsg('authMsg','Logging in...
 $('signupBtn').onclick=async()=>{ if(!sb)return; showMsg('authMsg','Creating account...'); const {error}=await sb.auth.signUp({email:$('email').value,password:$('password').value}); showMsg('authMsg',error?error.message:'Account created. Check email if confirmation is enabled, then log in.'); };
 $('signOutBtn').onclick=async()=>{await sb.auth.signOut()};
 
+function isAuthExpiredError(err){
+  const msg = (err && (err.message || String(err))).toLowerCase();
+  return msg.includes('jwt expired') || msg.includes('invalid jwt') || msg.includes('auth session missing') || msg.includes('refresh_token_not_found');
+}
+async function handleAuthExpired(err){
+  console.warn('Auth/session issue:', err);
+  try { await sb.auth.signOut(); } catch(e) {}
+  session=null; user=null; properties=[]; monthly=[]; historicalBills=[];
+  setAuthVisible(false);
+  showMsg('authMsg','Your login session expired. Please log in again.');
+}
 async function loadAll(){
- const p=await sb.from('properties').select('*').order('name'); if(p.error) alert(p.error.message); properties=p.data||[];
- const m=await sb.from('monthly_energy').select('*, properties(name)').order('bill_month',{ascending:false}); if(m.error) alert(m.error.message); monthly=m.data||[];
- historicalBills=[];
  try{
-   const h=await sb.from('historical_bills').select('*').order('statement_date',{ascending:false});
-   if(!h.error) historicalBills=h.data||[];
- }catch(e){ historicalBills=[]; }
- renderAll();
+   const p=await sb.from('properties').select('*').order('name');
+   if(p.error){ if(isAuthExpiredError(p.error)) return handleAuthExpired(p.error); throw p.error; }
+   properties=p.data||[];
+   const m=await sb.from('monthly_energy').select('*, properties(name)').order('bill_month',{ascending:false});
+   if(m.error){ if(isAuthExpiredError(m.error)) return handleAuthExpired(m.error); throw m.error; }
+   monthly=m.data||[];
+   historicalBills=[];
+   try{
+     const h=await sb.from('historical_bills').select('*').order('statement_date',{ascending:false});
+     if(h.error){ if(isAuthExpiredError(h.error)) return handleAuthExpired(h.error); }
+     else historicalBills=h.data||[];
+   }catch(e){ if(isAuthExpiredError(e)) return handleAuthExpired(e); historicalBills=[]; }
+   renderAll();
+ }catch(e){
+   if(isAuthExpiredError(e)) return handleAuthExpired(e);
+   alert('Data refresh failed: '+(e.message||e));
+ }
 }
 
 function renderAll(){sortProperties();renderDashboard();renderProperties();renderPropertyOptions();renderHistory();renderHistoricalBills();previewCalc();}

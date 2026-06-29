@@ -1,50 +1,44 @@
-# Shearin Energy Manager v0.2
+# Shearin Energy Manager v0.5.1 Auth Fix
 
-Mobile-first energy dashboard for Redding and Manteca.
+Complete release. Fixes expired Supabase JWT sessions so the app returns to the login screen instead of leaving the dashboard blank. No SQL changes required.
 
-## Build 0.1 includes
+Deploy by uploading all files to GitHub and committing. Then refresh the GitHub Pages app and sign in again if prompted.
 
-- Supabase authentication
-- Properties table
-- Monthly energy table
-- Manual monthly energy entry
-- Dashboard cards
-- Automatic calculations:
-  - Home usage = solar produced + grid import - grid export
-  - Solar offset = solar produced / home usage
-- Mobile-friendly layout
+# Shearin Energy Manager v0.5 Redo
 
-## Setup
+Complete release. Do not upload partial files.
 
-1. Create a new Supabase project.
-2. Open Supabase SQL Editor.
-3. Run `supabase/001_foundation.sql`.
-4. In Supabase, go to Project Settings > API.
-5. Copy the Project URL and anon public key.
-6. Paste them into `config.js`.
-7. Commit the updated files to GitHub.
-8. Deploy using GitHub Pages, Netlify, or Vercel.
+## What changed
 
-## First test
+- Keeps v0.4 financial dashboard.
+- Adds full energy categories: PG&E electric, PG&E gas, propane, kerosene, other delivered fuels.
+- Adds Manteca Tesla June 2026 solar production: 771.0 kWh.
+- Adds Historical PG&E Account Bills table and importer.
+- Adds missing manual edit fields for propane, kerosene, and other energy costs.
+- Keeps upload-first workflow; manual editing remains backup only.
 
-1. Create an account.
-2. Click **Add starter properties**.
-3. Go to **Monthly**.
-4. Enter June Redding data:
-   - Solar produced: 1822.1
-   - Grid import: 1554.428
-   - Grid export: 781.88
-   - Monthly NEM charge: 323.13
-   - True-Up balance: 4827.60
-   - Electric base charge: 25.39
-5. Save.
-6. Confirm dashboard shows home usage and solar offset.
+## SQL required
 
+Run these in Supabase SQL Editor in order if not already run:
 
-## Build 0.2 notes
+1. `supabase/002_delivered_fuels.sql`
+2. `supabase/003_historical_bills.sql`
 
-This build adds an Upload/Import tab and a one-tap loader for the June 2026 data already extracted from Mike's PG&E bill and Tesla Redding screenshots.
+Do not re-run `001_foundation.sql` if it already exists; it is included for archive completeness.
 
-Manteca Tesla production is intentionally left as 0 until those screenshots are imported.
+## Deployment
 
-No SQL changes are required from v0.1.
+Upload the complete contents of this ZIP to GitHub and commit.
+
+Then refresh the GitHub Pages app.
+
+## After deployment
+
+Go to Upload tab and click:
+
+1. `Load / Repair June 2026 Known Data`
+2. `Load Historical PG&E Bills`
+
+## Notes
+
+Historical PG&E records are currently account-level summaries from the uploaded statements. Property-level parsing will come later as the import engine improves.

@@ -16,7 +16,7 @@
     .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.metric{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:20px;font-weight:850;margin-top:2px}.wide{grid-column:1/-1}
     button,.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:800;background:var(--brand);color:#fff;cursor:pointer;font-size:15px}.btn.secondary,button.secondary{background:#e2e8f0;color:#0f172a}.btn.danger,button.danger{background:#fee2e2;color:#991b1b}.btn.ghost,button.ghost{background:transparent;color:var(--brand);padding:8px}
     input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:16px;background:white} label{font-size:13px;font-weight:750;display:block;margin:10px 0 5px}.form-grid{display:grid;gap:8px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}.tab{background:transparent;color:var(--muted);padding:8px 4px;font-size:12px;border-radius:12px}.tab.active{background:#ccfbf1;color:#134e4a}.tab span{display:block;font-size:20px;line-height:20px;margin-bottom:2px}
+    .tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:10}.tab{background:transparent;color:var(--muted);padding:8px 4px;font-size:12px;border-radius:12px}.tab.active{background:#ccfbf1;color:#134e4a}.tab span{display:block;font-size:20px;line-height:20px;margin-bottom:2px}
     .notice{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px}.good{color:var(--good)}.bad{color:var(--bad)}.muted{color:var(--muted)}
     table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left} th{color:var(--muted);font-size:12px}.right{text-align:right}.pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#e0f2fe;color:#075985;font-weight:800;font-size:12px}.auth{max-width:460px;margin:36px auto}.hero{font-size:30px;font-weight:900;line-height:1.05;margin-bottom:8px}
     @media(min-width:760px){.grid.cards{grid-template-columns:1fr 1fr}.form-grid.desktop{grid-template-columns:1fr 1fr}.tabs{left:50%;transform:translateX(-50%);max-width:980px;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0}.metrics{grid-template-columns:repeat(3,1fr)}.wide{grid-column:auto}}
@@ -26,7 +26,7 @@
 <header>
   <div class="wrap" style="padding:0">
     <div class="row">
-      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.1 Foundation</div></div>
+      <div><h1>Shearin Energy Manager</h1><div class="sub" id="statusLine">Build 0.2 Upload-first</div></div>
       <button class="secondary hidden" id="signOutBtn">Sign out</button>
     </div>
   </div>
@@ -45,7 +45,7 @@
 
   <section id="appView" class="hidden">
     <section id="dashboardView" class="view">
-      <div class="row wraprow" style="margin-bottom:12px"><div><div class="title">Dashboard</div><div class="small">Latest saved month for each property</div></div><button id="seedBtn" class="secondary">Add starter properties</button></div>
+      <div class="row wraprow" style="margin-bottom:12px"><div><div class="title">Dashboard</div><div class="small">Latest saved month for each property • upload-first workflow</div></div><button id="seedBtn" class="secondary">Add starter properties</button></div>
       <div id="dashboardCards" class="grid cards"></div>
     </section>
 
@@ -91,10 +91,34 @@
       <div class="card" style="margin-top:12px"><div class="title">History</div><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Property</th><th class="right">Solar</th><th class="right">Home</th><th class="right">Offset</th><th class="right">True-Up</th></tr></thead><tbody id="historyRows"></tbody></table></div></div>
     </section>
 
+    <section id="uploadView" class="view hidden">
+      <div class="card">
+        <div class="title">Upload / Import</div>
+        <p class="small">Build 0.2 starts the real workflow: the app should get data from bills and Tesla screenshots, not from you typing rows.</p>
+        <div class="notice small" style="margin-top:10px">
+          For this build, use the button below to load the June 2026 data we already extracted from your PG&E bill and Tesla screenshots. Next build will add file upload + review/accept.
+        </div>
+        <button id="loadJuneBtn" style="margin-top:12px">Load June 2026 Known Data</button>
+      </div>
+
+      <div class="grid cards" style="margin-top:12px">
+        <div class="card">
+          <div class="title">📄 PG&E Bill</div>
+          <p class="small">Coming next: upload the PDF and the app extracts billing period, imports, exports, NEM charge, gas, and True-Up.</p>
+          <button class="secondary" disabled>Upload PG&E PDF soon</button>
+        </div>
+        <div class="card">
+          <div class="title">☀️ Tesla Screenshots</div>
+          <p class="small">Coming next: upload screenshots and confirm solar production numbers for each property.</p>
+          <button class="secondary" disabled>Upload Tesla screenshots soon</button>
+        </div>
+      </div>
+    </section>
+
     <section id="settingsView" class="view hidden">
       <div class="card">
         <div class="title">Settings</div>
-        <p class="small">Build 0.1 is intentionally manual. Next builds add PG&E PDF import, Tesla screenshot import, charts, and forecasting.</p>
+        <p class="small">Build 0.2 starts the upload-first workflow. Manual editing remains available as the fallback when an import needs correction.</p>
         <button id="refreshBtn" class="secondary">Refresh data</button>
       </div>
     </section>
@@ -103,8 +127,9 @@
 
 <nav class="tabs hidden" id="tabs">
   <button class="tab active" data-view="dashboardView"><span>🏠</span>Dashboard</button>
+  <button class="tab" data-view="uploadView"><span>⬆️</span>Upload</button>
   <button class="tab" data-view="propertiesView"><span>📍</span>Properties</button>
-  <button class="tab" data-view="monthlyView"><span>⚡</span>Monthly</button>
+  <button class="tab" data-view="monthlyView"><span>⚡</span>Data</button>
   <button class="tab" data-view="settingsView"><span>⚙️</span>Settings</button>
 </nav>
 
@@ -126,7 +151,7 @@ for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.text
 $('billMonth').value=isoMonth();
 
 function showMsg(id,msg){$(id).textContent=msg||''}
-function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.1':'Build 0.1 Foundation'}
+function setAuthVisible(isIn){$('authView').classList.toggle('hidden',isIn);$('appView').classList.toggle('hidden',!isIn);$('tabs').classList.toggle('hidden',!isIn);$('signOutBtn').classList.toggle('hidden',!isIn);$('statusLine').textContent=isIn?'Signed in • Build 0.1':'Build 0.2 Upload-first'}
 
 async function init(){
  if(!configured){showMsg('authMsg','Supabase is not configured yet.'); return;}
@@ -191,6 +216,40 @@ $('saveEnergyBtn').onclick=async()=>{
  const payload={owner_id:user.id,property_id:$('energyProperty').value,bill_month:bm,billing_period_start:$('billStart').value||null,billing_period_end:$('billEnd').value||null,solar_produced_kwh:num('solarProduced'),grid_import_kwh:num('gridImport'),grid_export_kwh:num('gridExport'),monthly_nem_charge:num('nemCharge'),trueup_balance:num('trueupBalance'),electric_base_charge:num('baseCharge'),gas_cost:num('gasCost'),gas_therms:num('gasTherms'),amount_due_now:num('amountDue'),notes:$('energyNotes').value.trim()};
  const {error}=await sb.from('monthly_energy').upsert(payload,{onConflict:'owner_id,property_id,bill_month'}); if(error) alert(error.message); else {alert('Saved.'); await loadAll();}
 };
+
+
+async function findOrCreateProperty(row){
+  let existing = properties.find(p => p.name.toLowerCase() === row.name.toLowerCase());
+  if(existing) return existing;
+  const payload = {owner_id:user.id, ...row};
+  const {data,error} = await sb.from('properties').insert(payload).select().single();
+  if(error) throw error;
+  properties.push(data);
+  return data;
+}
+
+async function loadKnownJuneData(){
+  if(!user) return alert('Please log in first.');
+  if(!confirm('Load the June 2026 Redding and Manteca data we already extracted? This will update June if it already exists.')) return;
+  try{
+    await loadAll();
+    const redding = await findOrCreateProperty({name:'Redding',address:'12465 Maria Dr',utility_company:'PG&E',solar_company:'Tesla',trueup_month:8,notes:'Created from June 2026 import'});
+    const manteca = await findOrCreateProperty({name:'Manteca',address:'1631 Paola Pl',utility_company:'PG&E',solar_company:'Tesla',trueup_month:5,notes:'Created from June 2026 import'});
+    const rows = [
+      {owner_id:user.id,property_id:redding.id,bill_month:'2026-06-01',billing_period_start:'2026-05-22',billing_period_end:'2026-06-22',solar_produced_kwh:1822.1,grid_import_kwh:1554.428,grid_export_kwh:781.880,monthly_nem_charge:323.13,trueup_balance:4827.60,electric_base_charge:25.39,gas_cost:0,gas_therms:0,amount_due_now:25.39,notes:'Imported from PG&E June 2026 bill + Tesla Redding screenshot analysis'},
+      {owner_id:user.id,property_id:manteca.id,bill_month:'2026-06-01',billing_period_start:'2026-05-22',billing_period_end:'2026-06-22',solar_produced_kwh:0,grid_import_kwh:654.721,grid_export_kwh:643.818,monthly_nem_charge:3.55,trueup_balance:3.55,electric_base_charge:25.39,gas_cost:17.35,gas_therms:7,amount_due_now:42.74,notes:'Imported from PG&E June 2026 bill. Tesla Manteca production still needed.'}
+    ];
+    const {error} = await sb.from('monthly_energy').upsert(rows,{onConflict:'owner_id,property_id,bill_month'});
+    if(error) throw error;
+    await loadAll();
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelector('[data-view="dashboardView"]').classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+    $('dashboardView').classList.remove('hidden');
+    alert('June 2026 data loaded. Manteca solar production is still set to 0 until we import your Tesla screenshots.');
+  }catch(e){ alert(e.message || e); }
+}
+if($('loadJuneBtn')) $('loadJuneBtn').onclick=loadKnownJuneData;
 
 $('refreshBtn').onclick=loadAll;
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));$(b.dataset.view).classList.remove('hidden');});

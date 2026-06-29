@@ -1,4 +1,4 @@
-# Shearin Energy Manager v0.1
+# Shearin Energy Manager v0.2
 
 Mobile-first energy dashboard for Redding and Manteca.
 
@@ -39,3 +39,12 @@ Mobile-first energy dashboard for Redding and Manteca.
    - Electric base charge: 25.39
 5. Save.
 6. Confirm dashboard shows home usage and solar offset.
+
+
+## Build 0.2 notes
+
+This build adds an Upload/Import tab and a one-tap loader for the June 2026 data already extracted from Mike's PG&E bill and Tesla Redding screenshots.
+
+Manteca Tesla production is intentionally left as 0 until those screenshots are imported.
+
+No SQL changes are required from v0.1.
